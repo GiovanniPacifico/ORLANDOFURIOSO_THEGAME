@@ -1,0 +1,14 @@
+{ "columns":29,
+ "image":"..\/..\/Free Pixel Art plataformer painted style\/PNG\/tileset.png",
+ "imageheight":256,
+ "imagewidth":950,
+ "margin":0,
+ "name":"painted",
+ "spacing":0,
+ "tilecount":232,
+ "tiledversion":"1.4.2",
+ "tileheight":32,
+ "tilewidth":32,
+ "type":"tileset",
+ "version":1.4
+}
