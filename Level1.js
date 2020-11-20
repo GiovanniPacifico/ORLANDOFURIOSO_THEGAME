@@ -38,6 +38,9 @@ var saraceni;
 var lupi;
 
 var hud;
+var hpviz;
+var hpviz2;
+var hpviz3;
 var scudi;
 var hp = 1;
 
@@ -77,7 +80,7 @@ var groundlayer;
 
 		
 		
-		
+		setHUD();
 		setPlayer();
 		setLupi();
 		setSaraceni();
@@ -102,7 +105,7 @@ var groundlayer;
 		
 	
 		
-		setHUD();
+		
 
 
 		playermovement();
@@ -118,11 +121,7 @@ var groundlayer;
 
 		scudi.getChildAt(0).animations.play('mov');
 		
-		/*var firstAttackTimer;
-		firstAttackTimer = gioco.time.create(false);
-		firstAttackTimer.add(3000,playerAtkDirection(), this);
-		firstAttackTimer.start();
-		*/
+
 	}
 
 
@@ -142,15 +141,22 @@ var groundlayer;
 	}
 
 	function hitAndRespawn(player, enemy){
-			if(hp>1){
-			hp--;
-			player.x = 200;
-			player.y = 500;
+			if(hp==3){
+				hp--;
+				hpviz3.tint = 0x808080;
 			}
-			else 
-			player.x = 100;
-			player.y = 600;
-	}
+			if(hp==2){
+				hp--;
+				hpviz2.tint = 0x808080;
+			}
+			if(hp==1){
+				player.x = 100;
+				player.y = 100;
+			}
+
+			
+			
+		}
 
 	function setPlayer(){
 
@@ -254,7 +260,7 @@ var groundlayer;
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.LEFT) && gioco.time.now > atkTimer){
 			if(facing !== "left")
 					facing = "left";
-			atkTimer = gioco.time.now + 1000;
+			atkTimer = gioco.time.now + 500;
 			player.animations.play("atkLateral");
 			gioco.physics.arcade.overlap(hitbox2,saraceni,spearLeftCollision);
 			gioco.physics.arcade.overlap(hitbox2,lupi,spearLeftCollision);
@@ -262,18 +268,18 @@ var groundlayer;
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.RIGHT) && gioco.time.now > atkTimer){
 			if(facing !== "right")
 					facing = "right";
-			atkTimer = gioco.time.now + 1000;
+			atkTimer = gioco.time.now + 500;
 			player.animations.play("atkLateral");
 			gioco.physics.arcade.overlap(hitbox1,saraceni,spearRightCollision);
 			gioco.physics.arcade.overlap(hitbox1,lupi,spearRightCollision);
 		}
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.UP) && gioco.time.now > atkTimer){
-			atkTimer = gioco.time.now + 1000;
+			atkTimer = gioco.time.now + 500;
 			gioco.physics.arcade.overlap(hitbox3,saraceni,spearUpCollision);
 			gioco.physics.arcade.overlap(hitbox3,lupi,spearUpCollision);
 		}
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.DOWN) && player.body.onFloor() == false && gioco.time.now > atkTimer){
-			atkTimer = gioco.time.now + 1000;
+			atkTimer = gioco.time.now + 500;
 			gioco.physics.arcade.overlap(hitbox4,saraceni,spearDownCollision);
 			gioco.physics.arcade.overlap(hitbox4,lupi,spearDownCollision);
 			
@@ -369,6 +375,13 @@ var groundlayer;
 		if(hp<3){
 			hp++;
 			scudo.kill();
+
+			if(hp>1){
+				hpviz2.tint = 0xFFFFFF;
+			}
+			if(hp>2){
+				hpviz3.tint = 0xFFFFFF;
+			}
 		}
 
 		
@@ -376,11 +389,7 @@ var groundlayer;
 
 
 	function setHUD(){
-		hud = gioco.add.group();
-		var hpviz;
-		var hpviz2;
-		var hpviz3;
-
+		hud = gioco.add.physicsGroup();
 		hpviz = hud.create(50,50, 'scudo');
 		hpviz.anchor.setTo(0.5,0,5);
 		hpviz.scale.setTo(2);
@@ -393,28 +402,24 @@ var groundlayer;
 		hpviz3.anchor.setTo(0.5,0,5);
 		hpviz3.scale.setTo(2);
 		hpviz3.smoothed = false;
+		hpviz2.tint = 0x808080;
+		hpviz3.tint = 0x808080;
 
 
-			hpviz2.tint = 0x808080 ;
-			hpviz3.tint = 0x808080 ;
+		hud.fixedToCamera = true;
+		hud.cameraOffset.setTo(10,10);
 
-		if(hp>1){
-			hpviz2.tint = 0xFFFFFF;
-		}
-		if(hp>2){
-			hpviz3.tint = 0xFFFFFF;
-		}
+			
+
 		
 	}
 
 
 	function render(){
-		/*gioco.debug.body(player,'rgba(0,0,255,0.3)');
+		gioco.debug.body(player,'rgba(0,0,255,0.3)');
 		gioco.debug.physicsGroup(saraceni,'rgba(255,0,0,0.3)');
 		gioco.debug.physicsGroup(lupi,'rgba(255,0,0,0.3)');
 		gioco.debug.physicsGroup(hitboxes,'rgba(0,170,255,0.3)');
 		gioco.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');
 		gioco.debug.text("hp: "+ hp,10,15);
-	*/} 
-//gioco.state.add('Level1',Level1.js);
-//gioco.state.start('Level1');
+	} 
