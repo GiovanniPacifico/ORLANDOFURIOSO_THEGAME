@@ -17,7 +17,7 @@ var gioco = new Phaser.Game(1024,768, Phaser.AUTO,'ORLANDOFURIOSO',{preload: pre
 		gioco.load.spritesheet('astolfo', 'assets/astolfo_spritesheet.png',21,40,32); //carica lo sprite di astolfo
 
 		gioco.load.spritesheet('saraceno', 'assets/saraceno_spritesheet.png',21,35,17);
-		gioco.load.spritesheet('lupo', 'assets/wolf_running.png',45,25);
+		gioco.load.spritesheet('lupo', 'assets/wolf_running.png',45,25,9);
 		gioco.load.spritesheet('scudo', 'assets/scudo_anim.png',25,35,5);
 		//tilemap loading
 		gioco.load.tilemap('map', 'assets/newmap.json', null, Phaser.Tilemap.TILED_JSON);
@@ -113,6 +113,8 @@ var groundlayer;
 		movimentoSaraceno(600,800,saraceni.getChildAt(1));
 		movimentoSaraceno(1000,1200,saraceni.getChildAt(2));
 
+		movimentoLupi(lupi.getChildAt(0));
+		movimentoLupi(lupi.getChildAt(1));
 
 		scudi.getChildAt(0).animations.play('mov');
 		
@@ -135,7 +137,7 @@ var groundlayer;
 			enemy.kill();
 	}
 	function spearDownCollision(hitboxes, enemy){
-			player.body.velocity.y = -100;
+			player.body.velocity.y = -300;
 			enemy.kill();
 	}
 
@@ -256,26 +258,26 @@ var groundlayer;
 					facing = "left";
 			atkTimer = gioco.time.now + 1000;
 			player.animations.play("atkLateral");
-			gioco.physics.arcade.overlap(hitboxes,saraceni,spearLeftCollision);
-			gioco.physics.arcade.overlap(hitboxes,lupi,spearLeftCollision);
+			gioco.physics.arcade.overlap(hitbox2,saraceni,spearLeftCollision);
+			gioco.physics.arcade.overlap(hitbox2,lupi,spearLeftCollision);
 		}
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.RIGHT) && gioco.time.now > atkTimer){
 			if(facing !== "right")
 					facing = "right";
 			atkTimer = gioco.time.now + 1000;
 			player.animations.play("atkLateral");
-			gioco.physics.arcade.overlap(hitboxes,saraceni,spearRightCollision);
-			gioco.physics.arcade.overlap(hitboxes,lupi,spearRightCollision);
+			gioco.physics.arcade.overlap(hitbox1,saraceni,spearRightCollision);
+			gioco.physics.arcade.overlap(hitbox1,lupi,spearRightCollision);
 		}
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.UP) && gioco.time.now > atkTimer){
 			atkTimer = gioco.time.now + 1000;
-			gioco.physics.arcade.overlap(hitboxes,saraceni,spearUpCollision);
-			gioco.physics.arcade.overlap(hitboxes,lupi,spearUpCollision);
+			gioco.physics.arcade.overlap(hitbox3,saraceni,spearUpCollision);
+			gioco.physics.arcade.overlap(hitbox3,lupi,spearUpCollision);
 		}
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.DOWN) && player.body.onFloor() == false && gioco.time.now > atkTimer){
 			atkTimer = gioco.time.now + 1000;
-			gioco.physics.arcade.overlap(hitboxes,saraceni,spearDownCollision);
-			gioco.physics.arcade.overlap(hitboxes,lupi,spearDownCollision);
+			gioco.physics.arcade.overlap(hitbox4,saraceni,spearDownCollision);
+			gioco.physics.arcade.overlap(hitbox4,lupi,spearDownCollision);
 			
 		}
 
@@ -327,12 +329,15 @@ var groundlayer;
 
 	function setLupi(){
 		lupi = gioco.add.physicsGroup();
-		var lupo1 = lupi.create(1300,600,'lupo'); 
-		var lupo2 = lupi.create(2000,500,'lupo');
+		var lupo1 = lupi.create(1300,100,'lupo'); 
+		var lupo2 = lupi.create(2000,100,'lupo');
 		
 		lupi.setAll('smoothed', false);
-		lupo1.scale.setTo(scala);
-		lupo2.scale.setTo(scala);
+		lupo1.scale.setTo(-scala,scala);
+		lupo2.scale.setTo(-scala,scala);
+		lupo1.animations.add('corsa',[1,2,3,4,5,6,7,8],12,true);
+		lupo2.animations.add('corsa',[1,2,3,4,5,6,7,8],12,true);
+
 
 		gioco.physics.enable(lupi, Phaser.Physics.ARCADE);
 		lupi.setAll('body.collideWorldBounds', true);
@@ -341,6 +346,16 @@ var groundlayer;
 		
 		
 		return lupi;
+	}
+
+	function movimentoLupi(lupo){
+			
+		if(lupo.body.velocity.x == 0 && lupo.scale == [-scala, scala]){
+			lupo.body.velocity.x = 100;
+		}else
+			lupo.body.velocity.x = -100;
+
+		lupo.animations.play('corsa');
 	}
 
 	function setScudi(){
@@ -365,11 +380,12 @@ var groundlayer;
 
 
 	function render(){
-		/*gioco.debug.body(player,'rgba(0,0,255,0.3)');
+		gioco.debug.body(player,'rgba(0,0,255,0.3)');
 		gioco.debug.physicsGroup(saraceni,'rgba(255,0,0,0.3)');
 		gioco.debug.physicsGroup(lupi,'rgba(255,0,0,0.3)');
 		gioco.debug.physicsGroup(hitboxes,'rgba(0,170,255,0.3)');
-		gioco.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');*/
+		gioco.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');
+
 	} 
 //gioco.state.add('Level1',Level1.js);
 //gioco.state.start('Level1');
