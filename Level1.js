@@ -26,15 +26,10 @@ var gioco = new Phaser.Game(1024,768, Phaser.AUTO,'ORLANDOFURIOSO',{preload: pre
 //hitboxes del giocatore
 var player;
 var hitboxes; 
-var hitbox1;
-var hitbox2;
-var hitbox3;
-var hitbox4;
-//posizione dell'hitbox della lancia
-var spearAtkPosX; 
-var spearAtkPosY;
-var spearSizeX;
-var spearSizeY;
+var hitbox1; //hitbox attacco destro
+var hitbox2; //hitbox attacco sinistro
+var hitbox3; //hitbox attacco su
+var hitbox4; //hitbox attacco giù
 
 //Gruppo di nemici 1
 var saraceni;
@@ -100,16 +95,15 @@ var groundlayer;
 		gioco.physics.arcade.overlap(player,lupi,hitAndRespawn);
 		gioco.physics.arcade.overlap(player,scudi,pickUpScudi);
 
-		hitbox1.body.setSize(spearSizeX,spearSizeY,spearAtkPosX,spearAtkPosY);
+		
 
 		//EFFETTO PARALLASSE
-		if(player.body.position.x > 1024){
 		sfondo1.tilePosition.x = player.x * 0.1;
 		sfondo2.tilePosition.x = player.x * -0.3;
-		}
+		
+		
+
 		playermovement();
-		
-		
 		playerAtkDirection();
 		
 		
@@ -153,7 +147,7 @@ var groundlayer;
 			}
 			else 
 			player.x = 100;
-			player.y = 100;
+			player.y = 600;
 	}
 
 	function setPlayer(){
@@ -171,9 +165,31 @@ var groundlayer;
  		player.body.gravity.y = 600; //gravità che viene applicata sul giocatore
  		
  		hitboxes = gioco.add.physicsGroup();
- 		hitbox1 = hitboxes.create(0,0,null);
+
  		player.addChild(hitboxes);
- 		hitbox1.name = "spear";
+ 		hitbox1 = hitboxes.create(0,0,null);
+		hitbox1.name = "spearRight";
+		hitbox1.body.setSize(30,80,20,-80);
+
+
+ 		hitbox2 = hitboxes.create(0,0,null);
+		hitbox2.name = "spearLeft";
+		hitbox2.body.setSize(30,80,-50,-80);
+
+ 		hitbox3 = hitboxes.create(0,0,null);
+		hitbox3.name = "spearUp";
+		hitbox3.body.setSize(60,30,-30,-110);
+
+ 		hitbox4 = hitboxes.create(0,0,null);
+		hitbox4.name = "spearDown";
+		hitbox4.body.setSize(60,30,-30,0);
+
+
+ 		
+ 		
+ 		
+ 		
+ 		
 
 
 
@@ -229,20 +245,11 @@ var groundlayer;
 	//FUNZIONE DI ATTACCO MULTIDIREZIONALE
 	function playerAtkDirection(){
 
-			/*BUG IMPORTANTE
-			Appena starta si refresha la pagina se clicco un qualsiasi tasto d'attacco alcuni nemici che non sono visibili 
-			muoiono fuori dalla collisione senza motivo
-			*/
 		
 
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.LEFT) && gioco.time.now > atkTimer){
 			if(facing !== "left")
 					facing = "left";
-
-			spearAtkPosX = -50;
-			spearAtkPosY = -80;
-			spearSizeX = 30;
-			spearSizeY = 80;
 			atkTimer = gioco.time.now + 200;
 			gioco.physics.arcade.overlap(hitboxes,saraceni,spearLeftCollision);
 			gioco.physics.arcade.overlap(hitboxes,lupi,spearLeftCollision);
@@ -250,29 +257,16 @@ var groundlayer;
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.RIGHT) && gioco.time.now > atkTimer){
 			if(facing !== "right")
 					facing = "right";
-
-			spearAtkPosX =	20;
-			spearAtkPosY = -80;
-			spearSizeX = 30;
-			spearSizeY = 80;
 			atkTimer = gioco.time.now + 200;
 			gioco.physics.arcade.overlap(hitboxes,saraceni,spearRightCollision);
 			gioco.physics.arcade.overlap(hitboxes,lupi,spearRightCollision);
 		}
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.UP) && gioco.time.now > atkTimer){
-			spearAtkPosX = -30 ;
-			spearAtkPosY = -110;
-			spearSizeX = 60;
-			spearSizeY = 30;
 			atkTimer = gioco.time.now + 200;
 			gioco.physics.arcade.overlap(hitboxes,saraceni,spearUpCollision);
 			gioco.physics.arcade.overlap(hitboxes,lupi,spearUpCollision);
 		}
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.DOWN) && player.body.onFloor() == false && gioco.time.now > atkTimer){
-			spearAtkPosX = -30;
-			spearAtkPosY = 0;
-			spearSizeX = 60;
-			spearSizeY = 30;
 			atkTimer = gioco.time.now + 200;
 			gioco.physics.arcade.overlap(hitboxes,saraceni,spearDownCollision);
 			gioco.physics.arcade.overlap(hitboxes,lupi,spearDownCollision);
@@ -365,11 +359,11 @@ var groundlayer;
 
 
 	function render(){
-		gioco.debug.body(player);
-		gioco.debug.physicsGroup(saraceni);
-		gioco.debug.physicsGroup(lupi);
-		gioco.debug.physicsGroup(hitboxes);
-		gioco.debug.physicsGroup(scudi);
+		gioco.debug.body(player,'rgba(0,0,255,0.3)');
+		gioco.debug.physicsGroup(saraceni,'rgba(255,0,0,0.3)');
+		gioco.debug.physicsGroup(lupi,'rgba(255,0,0,0.3)');
+		gioco.debug.physicsGroup(hitboxes,'rgba(0,170,255,0.3)');
+		gioco.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');
 	} 
 //gioco.state.add('Level1',Level1.js);
 //gioco.state.start('Level1');
