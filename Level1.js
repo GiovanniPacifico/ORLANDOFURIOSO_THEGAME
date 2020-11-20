@@ -37,9 +37,9 @@ var saraceni;
 //Gruppo di nemici 2
 var lupi;
 
+var hud;
 var scudi;
 var hp = 1;
-var hptext;
 
 var scala = 2; //scala di tutti gli sprite di gioco
 var facing = "left"; //direzione in cui va il personaggio
@@ -83,7 +83,6 @@ var groundlayer;
 		setSaraceni();
 		setScudi();
 		
-		hptext = gioco.add.text(100,100,'HP = '+hp);
 		
 	}
 
@@ -101,9 +100,10 @@ var groundlayer;
 		sfondo1.tilePosition.x = player.x * -0.1;
 		sfondo2.tilePosition.x = player.x * -0.3;
 		
-		if (player.x>512)
-		hptext.x = player. x - 400;
+	
 		
+		setHUD();
+
 
 		playermovement();
 		playerAtkDirection();
@@ -144,8 +144,6 @@ var groundlayer;
 	function hitAndRespawn(player, enemy){
 			if(hp>1){
 			hp--;
-			hptext.destroy();
-			hptext = gioco.add.text(100,100,"HP = "+ hp);
 			player.x = 200;
 			player.y = 500;
 			}
@@ -371,21 +369,52 @@ var groundlayer;
 		if(hp<3){
 			hp++;
 			scudo.kill();
-			hptext.destroy();
-			hptext = gioco.add.text(100,100,'HP = '+hp);
 		}
+
+		
 	}
 
 
+	function setHUD(){
+		hud = gioco.add.group();
+		var hpviz;
+		var hpviz2;
+		var hpviz3;
+
+		hpviz = hud.create(50,50, 'scudo');
+		hpviz.anchor.setTo(0.5,0,5);
+		hpviz.scale.setTo(2);
+		hpviz.smoothed = false;
+		hpviz2 = hud.create(110,50, 'scudo');
+		hpviz2.anchor.setTo(0.5,0,5);
+		hpviz2.scale.setTo(2);
+		hpviz2.smoothed = false;
+		hpviz3 = hud.create(170,50, 'scudo');
+		hpviz3.anchor.setTo(0.5,0,5);
+		hpviz3.scale.setTo(2);
+		hpviz3.smoothed = false;
+
+
+			hpviz2.tint = 0x808080 ;
+			hpviz3.tint = 0x808080 ;
+
+		if(hp>1){
+			hpviz2.tint = 0xFFFFFF;
+		}
+		if(hp>2){
+			hpviz3.tint = 0xFFFFFF;
+		}
+		
+	}
 
 
 	function render(){
-		gioco.debug.body(player,'rgba(0,0,255,0.3)');
+		/*gioco.debug.body(player,'rgba(0,0,255,0.3)');
 		gioco.debug.physicsGroup(saraceni,'rgba(255,0,0,0.3)');
 		gioco.debug.physicsGroup(lupi,'rgba(255,0,0,0.3)');
 		gioco.debug.physicsGroup(hitboxes,'rgba(0,170,255,0.3)');
 		gioco.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');
-
-	} 
+		gioco.debug.text("hp: "+ hp,10,15);
+	*/} 
 //gioco.state.add('Level1',Level1.js);
 //gioco.state.start('Level1');
