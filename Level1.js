@@ -14,8 +14,8 @@ var gioco = new Phaser.Game(1024,768, Phaser.AUTO,'ORLANDOFURIOSO',{preload: pre
 
 
 		
-		gioco.load.spritesheet('astolfo', 'assets/astolfo_spritesheet.png',21,40,14); //carica lo sprite di astolfo
-		gioco.load.spritesheet('astolfoatk1', 'assets/astolfo_atk_laterale.png',21,40,18);
+		gioco.load.spritesheet('astolfo', 'assets/astolfo_spritesheet.png',21,40,32); //carica lo sprite di astolfo
+
 		gioco.load.spritesheet('saraceno', 'assets/saraceno_spritesheet.png',21,35,17);
 		gioco.load.spritesheet('lupo', 'assets/wolf_running.png',45,25);
 		gioco.load.spritesheet('scudo', 'assets/scudo_anim.png',25,35,5);
@@ -98,9 +98,11 @@ var groundlayer;
 		
 
 		//EFFETTO PARALLASSE
-		sfondo1.tilePosition.x = player.x * 0.1;
+		sfondo1.tilePosition.x = player.x * -0.1;
 		sfondo2.tilePosition.x = player.x * -0.3;
 		
+		if (player.x>512)
+		hptext.x = player. x - 400;
 		
 
 		playermovement();
@@ -155,6 +157,8 @@ var groundlayer;
 		player = gioco.add.sprite(playerSpawnPoint[0], playerSpawnPoint[1], 'astolfo'); //posiziona astolfo
 		player.animations.add('idle',[0,1,2,3,4,5], 6, true);
 		player.animations.add('corsa',[6,7,8,9,10,11,12,13], 12, true);
+		player.animations.add('atkLateral',[14,15,16,17,18,19], 6, true);
+
 		player.anchor.setTo(0.5,1); //sposta l'anchor point del personaggio al centro dello sprite
 		player.scale.setTo(scala, scala); //scalo (valori positivi) o flippo (valori negativi) lo sprite
  		player.smoothed = false; //toglie l'antialiasing e fa tornare i pixel visibili (LESGOOO)
@@ -250,24 +254,26 @@ var groundlayer;
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.LEFT) && gioco.time.now > atkTimer){
 			if(facing !== "left")
 					facing = "left";
-			atkTimer = gioco.time.now + 200;
+			atkTimer = gioco.time.now + 1000;
+			player.animations.play("atkLateral");
 			gioco.physics.arcade.overlap(hitboxes,saraceni,spearLeftCollision);
 			gioco.physics.arcade.overlap(hitboxes,lupi,spearLeftCollision);
 		}
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.RIGHT) && gioco.time.now > atkTimer){
 			if(facing !== "right")
 					facing = "right";
-			atkTimer = gioco.time.now + 200;
+			atkTimer = gioco.time.now + 1000;
+			player.animations.play("atkLateral");
 			gioco.physics.arcade.overlap(hitboxes,saraceni,spearRightCollision);
 			gioco.physics.arcade.overlap(hitboxes,lupi,spearRightCollision);
 		}
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.UP) && gioco.time.now > atkTimer){
-			atkTimer = gioco.time.now + 200;
+			atkTimer = gioco.time.now + 1000;
 			gioco.physics.arcade.overlap(hitboxes,saraceni,spearUpCollision);
 			gioco.physics.arcade.overlap(hitboxes,lupi,spearUpCollision);
 		}
 		if(gioco.input.keyboard.isDown(Phaser.Keyboard.DOWN) && player.body.onFloor() == false && gioco.time.now > atkTimer){
-			atkTimer = gioco.time.now + 200;
+			atkTimer = gioco.time.now + 1000;
 			gioco.physics.arcade.overlap(hitboxes,saraceni,spearDownCollision);
 			gioco.physics.arcade.overlap(hitboxes,lupi,spearDownCollision);
 			
@@ -359,11 +365,11 @@ var groundlayer;
 
 
 	function render(){
-		gioco.debug.body(player,'rgba(0,0,255,0.3)');
+		/*gioco.debug.body(player,'rgba(0,0,255,0.3)');
 		gioco.debug.physicsGroup(saraceni,'rgba(255,0,0,0.3)');
 		gioco.debug.physicsGroup(lupi,'rgba(255,0,0,0.3)');
 		gioco.debug.physicsGroup(hitboxes,'rgba(0,170,255,0.3)');
-		gioco.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');
+		gioco.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');*/
 	} 
 //gioco.state.add('Level1',Level1.js);
 //gioco.state.start('Level1');
