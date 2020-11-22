@@ -19,6 +19,7 @@ var gioco = new Phaser.Game(1024,768, Phaser.AUTO,'ORLANDOFURIOSO',{preload: pre
 		gioco.load.spritesheet('saraceno', 'assets/saraceno_spritesheet.png',21,35,17);
 		gioco.load.spritesheet('lupo', 'assets/wolf_running.png',45,25,9);
 		gioco.load.spritesheet('scudo', 'assets/scudo_anim.png',25,35,5);
+		gioco.load.spritesheet('tutorialmov','assets/uparrow.png',27,28,5);
 		//tilemap loading
 		gioco.load.tilemap('map', 'assets/newmap.json', null, Phaser.Tilemap.TILED_JSON);
 		gioco.load.image('tiles', 'assets/tileset.png');
@@ -41,6 +42,7 @@ var hud;
 var hpviz;
 var hpviz2;
 var hpviz3;
+var tutorialmov;
 var scudi;
 var hp = 1;
 
@@ -405,6 +407,9 @@ var groundlayer;
 		hpviz2.tint = 0x808080;
 		hpviz3.tint = 0x808080;
 
+		tutorialmov = hud.create(playerSpawnPoint[0],playerSpawnPoint[1],'tutorialmov');
+		tutorialmov.animations.add('flash', [0,1,2,3,4],6,true);
+		tutorialmov.animations.play('flash');
 
 		hud.fixedToCamera = true;
 		hud.cameraOffset.setTo(10,10);
