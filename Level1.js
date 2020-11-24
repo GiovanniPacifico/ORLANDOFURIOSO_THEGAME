@@ -31,6 +31,7 @@ var hitbox1; //hitbox attacco destro
 var hitbox2; //hitbox attacco sinistro
 var hitbox3; //hitbox attacco su
 var hitbox4; //hitbox attacco giù
+var isGameOver = false;
 
 //Gruppo di nemici 1
 var saraceni;
@@ -122,6 +123,7 @@ var groundlayer;
 		movimentoLupi(lupi.getChildAt(1));
 
 		scudi.getChildAt(0).animations.play('mov');
+		scudi.getChildAt(1).animations.play('mov');
 		
 
 	}
@@ -143,20 +145,22 @@ var groundlayer;
 	}
 
 	function hitAndRespawn(player, enemy){
-			if(hp==3){
-				hp--;
-				hpviz3.tint = 0x808080;
-			}
-			if(hp==2){
+		if(hp<=1){
+			isGameOver = true;
+		}else if(hp==3){
+					hp--;
+					hpviz3.tint = 0x808080;
+					player.x = 100;
+					player.y = 500;
+					isGameOver = false;			
+			}else if(hp==2){
 				hp--;
 				hpviz2.tint = 0x808080;
-			}
-			if(hp==1){
 				player.x = 100;
-				player.y = 100;
-			}
-
-			
+				player.y = 500;
+				isGameOver = false;
+					
+			}	
 			
 		}
 
@@ -368,7 +372,9 @@ var groundlayer;
 
 		scudi = game.add.physicsGroup();
 		var scudo1 = scudi.create(300,300,'scudo');
+		var scudo2 = scudi.create(1200,500,'scudo');
 		scudo1.animations.add('mov', [0,1,2,3,4],6,true);
+		scudo2.animations.add('mov', [0,1,2,3,4],6,true);
 
 		return scudi;
 	}
@@ -436,4 +442,5 @@ var groundlayer;
 		game.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');
 		game.debug.text("hp: "+ hp,10,15);
 		game.debug.text("Tutorial timer off in: " + game.time.events.duration, 10,30);
+		game.debug.text("Game Over: " + isGameOver , 10,45);
 	} 
