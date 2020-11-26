@@ -54,6 +54,7 @@ var movVerticale = -380; //movimento verticale (salto o caduta rapida)
 var jumpTimer = 0; 
 var atkTimer = 0;
 let playerSpawnPoint = [100,500]; //x e y del punto di spawn del player
+var isInvincible = false;
 
 //variabili di sfondo e mappa
 var sfondo1;
@@ -96,8 +97,12 @@ var groundlayer;
 		game.physics.arcade.collide(player,groundlayer);
 		game.physics.arcade.collide(saraceni,groundlayer);
 		game.physics.arcade.collide(lupi,groundlayer);
+
+		if(isInvincible == false){
 		game.physics.arcade.overlap(player,saraceni,hitAndRespawn);
 		game.physics.arcade.overlap(player,lupi,hitAndRespawn);
+		}
+
 		game.physics.arcade.overlap(player,scudi,pickUpScudi);
 
 		
@@ -126,20 +131,28 @@ var groundlayer;
 		scudi.getChildAt(1).animations.play('mov');
 		
 
+		if(isGameOver == true){
+			isGameOver = false;
+			game.state.restart();
+		}
 	}
 
 
 
 	function spearUpCollision(hitboxes, enemy){
+		
 			enemy.kill();
 	}
 	function spearLeftCollision(hitboxes, enemy){
+		
 			enemy.kill();
 	}
 	function spearRightCollision(hitboxes, enemy){
+		
 			enemy.kill();
 	}
 	function spearDownCollision(hitboxes, enemy){
+		
 			player.body.velocity.y = -300;
 			enemy.kill();
 	}
@@ -150,18 +163,29 @@ var groundlayer;
 		}else if(hp==3){
 					hp--;
 					hpviz3.tint = 0x808080;
-					player.x = 100;
-					player.y = 500;
+					iFrame();
+					game.time.events.add(Phaser.Timer.SECOND * 1,resetiFrame,this);
+					
 					isGameOver = false;			
 			}else if(hp==2){
 				hp--;
 				hpviz2.tint = 0x808080;
-				player.x = 100;
-				player.y = 500;
+				iFrame();
+				game.time.events.add(Phaser.Timer.SECOND * 1,resetiFrame,this);
+
 				isGameOver = false;
 					
 			}	
 			
+		}
+
+		function iFrame(){
+			player.tint = 0x555555;
+			isInvincible = true;
+		}
+		function resetiFrame(){
+			player.tint = 0xFFFFFF;
+			isInvincible = false;
 		}
 
 	function setPlayer(){
@@ -169,7 +193,7 @@ var groundlayer;
 		player = game.add.sprite(playerSpawnPoint[0], playerSpawnPoint[1], 'astolfo'); //posiziona astolfo
 		player.animations.add('idle',[0,1,2,3,4,5], 6, true);
 		player.animations.add('corsa',[6,7,8,9,10,11,12,13], 12, true);
-		player.animations.add('atkLateral',[14,15,16,17,18,19], 6, true);
+		player.animations.add('atkLateral',[17,18,19,14], 12, false);
 
 		player.anchor.setTo(0.5,1); //sposta l'anchor point del personaggio al centro dello sprite
 		player.scale.setTo(scala, scala); //scalo (valori positivi) o flippo (valori negativi) lo sprite
@@ -233,7 +257,7 @@ var groundlayer;
 					facing = "right";
 				player.animations.play("corsa");
 			}
-		else{
+		else if(game.time.now> atkTimer + 1000){
 			player.animations.play("idle");
 		}
 
@@ -244,7 +268,7 @@ var groundlayer;
 				player.animations.play("corsa");
 			}
 
-			if(game.input.keyboard.isDown(Phaser.Keyboard.S) && player.body.onFloor() == false)
+			if(game.input.keyboard.isDown(Phaser.Keyboard.S) && player.body.onFloor() == false && game.time.now > atkTimer +3000 )
 			{
 				player.body.velocity.y = -movVerticale;
 				player.animations.play("idle");
@@ -263,21 +287,32 @@ var groundlayer;
 
 		
 
-		if(game.input.keyboard.isDown(Phaser.Keyboard.LEFT) && game.time.now > atkTimer){
+		if(game.input.keyboard.isDown(Phaser.Keyboard.LEFT)  && game.time.now > atkTimer){
+			
+			player.body.velocity.x = 0;
+
 			if(facing !== "left")
 					facing = "left";
 			atkTimer = game.time.now + 500;
 			player.animations.play("atkLateral");
 			game.physics.arcade.overlap(hitbox2,saraceni,spearLeftCollision);
 			game.physics.arcade.overlap(hitbox2,lupi,spearLeftCollision);
+			
+			
 		}
 		if(game.input.keyboard.isDown(Phaser.Keyboard.RIGHT) && game.time.now > atkTimer){
+			
+			player.body.velocity.x = 0;
+
 			if(facing !== "right")
 					facing = "right";
 			atkTimer = game.time.now + 500;
+
 			player.animations.play("atkLateral");
-			game.physics.arcade.overlap(hitbox1,saraceni,spearRightCollision);
-			game.physics.arcade.overlap(hitbox1,lupi,spearRightCollision);
+			if(game.time.now > atkTimer-1000 && game.time.now < atkTimer-500 +100){			
+				game.physics.arcade.overlap(hitbox1,saraceni,spearRightCollision);
+				game.physics.arcade.overlap(hitbox1,lupi,spearRightCollision);
+			}
 		}
 		if(game.input.keyboard.isDown(Phaser.Keyboard.UP) && game.time.now > atkTimer){
 			atkTimer = game.time.now + 500;
@@ -435,11 +470,11 @@ var groundlayer;
 
 
 	function render(){
-		game.debug.body(player,'rgba(0,0,255,0.3)');
+		/*game.debug.body(player,'rgba(0,0,255,0.3)');
 		game.debug.physicsGroup(saraceni,'rgba(255,0,0,0.3)');
 		game.debug.physicsGroup(lupi,'rgba(255,0,0,0.3)');
 		game.debug.physicsGroup(hitboxes,'rgba(0,170,255,0.3)');
-		game.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');
+		game.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');*/
 		game.debug.text("hp: "+ hp,10,15);
 		game.debug.text("Tutorial timer off in: " + game.time.events.duration, 10,30);
 		game.debug.text("Game Over: " + isGameOver , 10,45);

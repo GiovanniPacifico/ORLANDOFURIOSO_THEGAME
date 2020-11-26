@@ -1,0 +1,11 @@
+	body{
+		background-image: url('assets/pattern.jpg');
+		background-repeat: 3;
+		margin: 0;
+	}
+
+	canvas{
+		display: block;
+		padding-top: 5vw;	
+		padding-left: 22vw;
+		}
