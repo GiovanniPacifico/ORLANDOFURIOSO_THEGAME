@@ -9,7 +9,10 @@ var game = new Phaser.Game(1024,768, Phaser.AUTO,'ORLANDOFURIOSO',{preload: prel
 		game.load.image('sfondo1', 'assets/sfondo1p.png'); 
 		game.load.image('sfondo2', 'assets/sfondo2p.png'); 
 		game.load.image('sfondo3', 'assets/sfondo3p.png'); 
-
+		game.load.image('luna1', 'assets/luna1p.png'); 
+		game.load.image('luna2', 'assets/luna2p.png'); 
+		game.load.image('luna3', 'assets/luna3p.png'); 
+		game.load.image('luna4', 'assets/sfondolunaterra.png'); 
 
 
 
@@ -20,9 +23,11 @@ var game = new Phaser.Game(1024,768, Phaser.AUTO,'ORLANDOFURIOSO',{preload: prel
 		game.load.spritesheet('lupo', 'assets/wolf_running.png',45,25,9);
 		game.load.spritesheet('scudo', 'assets/scudo_anim.png',25,35,5);
 		game.load.spritesheet('tutorialmov','assets/uparrow.png',27,28,5);
-		game.load.spritesheet('arciere','assets/arciere_spritesheet.png',24,37,5)
-		game.load.spritesheet('freccia','assets/freccia.png',30,6,1)
-		game.load.spritesheet('pergamena','assets/pergamena.png',19,23,5)
+		game.load.spritesheet('arciere','assets/arciere_spritesheet.png',24,37,5);
+		game.load.spritesheet('freccia','assets/freccia.png',30,6,1);
+		game.load.spritesheet('pergamena','assets/pergamena.png',19,23,5);
+		game.load.spritesheet('ippogrifo','assets/ippogrifo.png',51,50,1);
+		game.load.spritesheet('checkpoint','assets/checkpoint_spritesheet.png',16,27,12);
 		//tilemap loading
 		game.load.tilemap('map', 'assets/foresta.json', null, Phaser.Tilemap.TILED_JSON);
 		game.load.image('tiles', 'assets/tileset-foresta.png');
@@ -50,6 +55,8 @@ var nFrecce = 99; //numero di frecce
 var sFrecce = 700; //velocità di frecce
 var dFrecce = 2500; //delay di frecce
 
+var ippogrifo;
+
 var hud;
 var hpviz;
 var pergGroup;
@@ -57,6 +64,8 @@ var tutorialmov;
 var scudi;
 var hp = 1;
 var maxHP = 3;
+var checkpoint;
+var nCP = 4;
 
 var collezionabili;
 var nCollezionabili = 5;
@@ -77,6 +86,10 @@ var isInvincible = false;
 var sfondo1;
 var sfondo2;
 var sfondo3;
+var luna1;
+var luna2;
+var luna3
+var luna4;
 var map;
 var groundlayer;
 
@@ -86,6 +99,12 @@ var groundlayer;
 		sfondo3 = game.add.tileSprite(0,0,1024*8,768,'sfondo3');
 		sfondo2 = game.add.tileSprite(0,0,1024*8,768,'sfondo2');
 		sfondo1 = game.add.tileSprite(0,0,1024*8,768,'sfondo1');
+
+		luna3 = game.add.tileSprite(1024*9,0,1024*7,768,'luna3');
+		luna2 = game.add.tileSprite(1024*9,0,1024*7,768,'luna2');
+		luna1 = game.add.tileSprite(1024*9,0,1024*7,768,'luna1');
+
+		luna4 = game.add.tileSprite(1024*16,0,1024,768,'luna4');
 
 
 		 //game physics
@@ -114,6 +133,8 @@ var groundlayer;
 		setArco();
 		setScudi();
 		setCollezionabili();
+		setIppogrifo();
+		setCheckpoint();
 
 		for(var i = 0; i<collPresi; i++){
 				pergGroup.getChildAt(i).tint = 0xFFFFFF;
@@ -133,6 +154,8 @@ var groundlayer;
 		game.physics.arcade.collide(saraceni,groundlayer);
 		game.physics.arcade.collide(lupi,groundlayer);
 		game.physics.arcade.collide(arcieri,groundlayer);
+		game.physics.arcade.collide(ippogrifo,groundlayer);
+		game.physics.arcade.collide(checkpoint,groundlayer);
 		
 
 		if(isInvincible == false){
@@ -146,6 +169,8 @@ var groundlayer;
 
 		game.physics.arcade.overlap(player,scudi,pickUpScudi);
 		game.physics.arcade.overlap(player,collezionabili,pickUpColl);
+		game.physics.arcade.overlap(player,ippogrifo,tp);
+		game.physics.arcade.overlap(player,checkpoint,activateCp);
 
 		if(player.y > 1000){
 			oobKill(player);
@@ -156,9 +181,12 @@ var groundlayer;
 		
 
 		//EFFETTO PARALLASSE
-		if(player.x <7500 || player.x >1024*10){
+		if(player.x <7500 ){
 		sfondo1.tilePosition.x = player.x * -0.1;
 		sfondo2.tilePosition.x = player.x * -0.3;
+		}else if(player.x >1024*10){
+			luna1.tilePosition.x = player.x * -0.1;
+			luna2.tilePosition.x = player.x * -0.3;
 		}
 	
 		
@@ -177,6 +205,7 @@ var groundlayer;
 		
 		movimentoLupi(lupi.getChildAt(0), 150);
 		movimentoLupi(lupi.getChildAt(1), 150);
+		movimentoLupi(lupi.getChildAt(2), 250);
 	
 
 
@@ -190,6 +219,11 @@ var groundlayer;
 		
 		for(var i=0; i<5;i++)
 		collezionabili.getChildAt(i).animations.play('mov');
+
+		
+		checkpoint.getChildAt(0).animations.play('idle');
+		checkpoint.getChildAt(1).animations.play('idle');
+		
 
 		if(isGameOver == true){
 			hp=1;
@@ -231,14 +265,21 @@ var groundlayer;
 			isGameOver = true;
 		}else if(hp==3){
 			game.camera.shake(0.03,250,true,Phaser.Camera.SHAKE_HORIZONTAL,true);
-					hp--;
-					hpviz.getChildAt(2).tint = 0x808080;
-					iFrame();
-					game.time.events.add(Phaser.Timer.SECOND * 1,resetiFrame,this);
+			player.body.velocity.y = Math.sin(230)*200;
+			//player.body.velocity.x = -1000;
+						
+			hp--;
+			hpviz.getChildAt(2).tint = 0x808080;
+			iFrame();
+			game.time.events.add(Phaser.Timer.SECOND * 1,resetiFrame,this);
 					
-					isGameOver = false;			
+			isGameOver = false;			
+			
 			}else if(hp==2){
 				game.camera.shake(0.03,250,true,Phaser.Camera.SHAKE_HORIZONTAL,true);
+				player.body.velocity.y = Math.sin(230)*200;
+				//player.body.velocity.x = -1000;
+				
 				hp--;
 				hpviz.getChildAt(1).tint = 0x808080;
 				iFrame();
@@ -466,20 +507,24 @@ var groundlayer;
 
 	function setLupi(){
 		lupi = game.add.physicsGroup();
-		var lupo1 = lupi.create(1110,500,'lupo'); 
-		var lupo2 = lupi.create(1470,300,'lupo');
+		var lupo1 = lupi.create(1110,520,'lupo'); 
+		var lupo2 = lupi.create(1470,320,'lupo');
+		var lupo3 = lupi.create(5900,500,'lupo');
 		
-		lupi.setAll('smoothed', false);
+		
 		lupo1.scale.setTo(-scala,scala);
 		lupo2.scale.setTo(-scala,scala);
+		lupo3.scale.setTo(-scala,scala);
 		lupo1.animations.add('corsa',[1,2,3,4,5,6,7,8],12,true);
 		lupo2.animations.add('corsa',[1,2,3,4,5,6,7,8],12,true);
+		lupo3.animations.add('corsa',[1,2,3,4,5,6,7,8],12,true);
 
 
 		game.physics.enable(lupi, Phaser.Physics.ARCADE);
 		//lupi.setAll('body.collideWorldBounds', true);
 		lupi.setAll('body.gravity.y',grav);
-
+		lupi.setAll('smoothed', false);
+		lupi.setAll('anchor.setTo',0.5,1);
 		
 		
 		return lupi;
@@ -669,8 +714,58 @@ var groundlayer;
 
 		
 	}
+	function setIppogrifo(){
+		ippogrifo = game.add.sprite(7860, 100, 'ippogrifo');
+		ippogrifo.scale.setTo(scala);
+		ippogrifo.smoothed = false;
+		game.physics.enable(ippogrifo);
+		ippogrifo.body.gravity.y = grav;
+		ippogrifo.anchor.setTo(0.5,1);
+
+		return ippogrifo;
+	}
+	function tp(){
+		player.x = 1024*10;
+		player.y = 550;
+	}
+
+	function setCheckpoint(){
+		checkpoint = game.add.physicsGroup();
+
+		var cp1 = game.add.sprite(1617,650,'checkpoint');
+
+		checkpoint.add(cp1);
+		checkpoint.getChildAt(0).scale.setTo(3);
+		checkpoint.getChildAt(0).smoothed = false;
+		checkpoint.getChildAt(0).anchor.setTo(0.5,1);
+		checkpoint.getChildAt(0).animations.add('idle',[0,1,2,3,4],12,true);
+		checkpoint.getChildAt(0).animations.add('check',[5,6,7,8,9,10,11],6,false);
+
+		var cp2 = game.add.sprite(4050,650,'checkpoint');
+
+		checkpoint.add(cp2);
+		checkpoint.getChildAt(1).scale.setTo(3);
+		checkpoint.getChildAt(1).smoothed = false;
+		checkpoint.getChildAt(1).anchor.setTo(0.5,1);
+		checkpoint.getChildAt(1).animations.add('idle',[0,1,2,3,4],12,true);
+		checkpoint.getChildAt(1).animations.add('check',[5,6,7,8,9,10,11],6,false);
+		
 
 
+		game.physics.enable(checkpoint);
+		checkpoint.setAll('body.gravity.y', grav);
+	
+		return checkpoint;
+	}
+
+	function activateCp(player,cp){
+		
+		cp.animations.play('check');
+		
+
+		playerSpawnPoint[0] = cp.x;
+		playerSpawnPoint[1] = cp.y;
+	}
 
 	function render(){
 		/*
