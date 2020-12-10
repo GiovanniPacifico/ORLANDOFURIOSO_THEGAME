@@ -12,7 +12,8 @@ var game = new Phaser.Game(1024,768, Phaser.AUTO,'ORLANDOFURIOSO',{preload: prel
 		game.load.image('luna1', 'assets/luna1p.png'); 
 		game.load.image('luna2', 'assets/luna2p.png'); 
 		game.load.image('luna3', 'assets/luna3p.png'); 
-		game.load.image('luna4', 'assets/sfondolunaterra.png'); 
+		game.load.image('luna4', 'assets/luna4.png');
+		game.load.image('maschera','assets/maschera.png'); 
 
 
 
@@ -23,11 +24,14 @@ var game = new Phaser.Game(1024,768, Phaser.AUTO,'ORLANDOFURIOSO',{preload: prel
 		game.load.spritesheet('lupo', 'assets/wolf_running.png',45,25,9);
 		game.load.spritesheet('scudo', 'assets/scudo_anim.png',25,35,5);
 		game.load.spritesheet('tutorialmov','assets/uparrow.png',27,28,5);
-		game.load.spritesheet('arciere','assets/arciere_spritesheet.png',24,37,5);
+		game.load.spritesheet('arciere','assets/arciere_spritesheet.png',26,37,6);
 		game.load.spritesheet('freccia','assets/freccia.png',30,6,1);
+		game.load.spritesheet('meteora','assets/meteora.png',23,23,3);
 		game.load.spritesheet('pergamena','assets/pergamena.png',19,23,5);
 		game.load.spritesheet('ippogrifo','assets/ippogrifo.png',51,50,1);
-		game.load.spritesheet('checkpoint','assets/checkpoint_spritesheet.png',16,27,12);
+		game.load.spritesheet('checkpoint','assets/checkpoint.png',30,36,1);
+		game.load.spritesheet('anima','assets/anima.png',23,31,6);
+		game.load.spritesheet('boss','assets/boss.png',21,40,1);
 		//tilemap loading
 		game.load.tilemap('map', 'assets/foresta.json', null, Phaser.Tilemap.TILED_JSON);
 		game.load.image('tiles', 'assets/tileset-foresta.png');
@@ -53,7 +57,14 @@ var arco2;
 var arco3;
 var nFrecce = 99; //numero di frecce
 var sFrecce = 700; //velocità di frecce
-var dFrecce = 2500; //delay di frecce
+var dFrecce = 2000; //delay di frecce
+
+var meteore;
+
+var anime;
+
+var boss;
+var swings;
 
 var ippogrifo;
 
@@ -79,7 +90,7 @@ var movOrizzontale = 160; //movimento orizzontale
 var movVerticale = -420; //movimento verticale (salto o caduta rapida)
 var jumpTimer = 0; 
 var atkTimer = 0;
-let playerSpawnPoint = [100,600]; //x e y del punto di spawn del player
+let playerSpawnPoint = [100,550]; //x e y del punto di spawn del player
 var isInvincible = false;
 
 //variabili di sfondo e mappa
@@ -90,6 +101,7 @@ var luna1;
 var luna2;
 var luna3
 var luna4;
+var maschera;
 var map;
 var groundlayer;
 
@@ -99,12 +111,13 @@ var groundlayer;
 		sfondo3 = game.add.tileSprite(0,0,1024*8,768,'sfondo3');
 		sfondo2 = game.add.tileSprite(0,0,1024*8,768,'sfondo2');
 		sfondo1 = game.add.tileSprite(0,0,1024*8,768,'sfondo1');
+		
+		luna4 = game.add.sprite(1024*15,0,'luna4');
+		luna3 = game.add.tileSprite(1024*9,0,1024*9,768,'luna3');
+		luna2 = game.add.tileSprite(1024*9,0,1024*9,768,'luna2');
+		luna1 = game.add.tileSprite(1024*9,0,1024*9,768,'luna1');
 
-		luna3 = game.add.tileSprite(1024*9,0,1024*7,768,'luna3');
-		luna2 = game.add.tileSprite(1024*9,0,1024*7,768,'luna2');
-		luna1 = game.add.tileSprite(1024*9,0,1024*7,768,'luna1');
-
-		luna4 = game.add.tileSprite(1024*16,0,1024,768,'luna4');
+		
 
 
 		 //game physics
@@ -135,16 +148,23 @@ var groundlayer;
 		setCollezionabili();
 		setIppogrifo();
 		setCheckpoint();
+		setMeteore();
+		setAnime();
+		setBoss();
 
 		for(var i = 0; i<collPresi; i++){
 				pergGroup.getChildAt(i).tint = 0xFFFFFF;
 				collezionabili.getChildAt(i).kill();
 				}
+	
+		maschera = game.add.image(0,0, 'maschera');
+		maschera.alpha = 0;
+		maschera.fixedToCamera = true;
 	}
 
 	function update(){
 
-		if(player.x <7500 || player.x >1024*10){
+		if(player.x <7500 || player.x >1024*9.5){
  			game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 		}else{
 			game.camera.setPosition(1024*7 - 200,400);
@@ -156,6 +176,8 @@ var groundlayer;
 		game.physics.arcade.collide(arcieri,groundlayer);
 		game.physics.arcade.collide(ippogrifo,groundlayer);
 		game.physics.arcade.collide(checkpoint,groundlayer);
+		game.physics.arcade.collide(anime,groundlayer);
+		game.physics.arcade.collide(boss,groundlayer);
 		
 
 		if(isInvincible == false){
@@ -165,30 +187,31 @@ var groundlayer;
 		game.physics.arcade.overlap(player,arco.bullets,hitAndRespawn);
 		game.physics.arcade.overlap(player,arco2.bullets,hitAndRespawn);
 		game.physics.arcade.overlap(player,arco3.bullets,hitAndRespawn);
+		game.physics.arcade.overlap(player,meteore,hitAndRespawn);
+		game.physics.arcade.overlap(player,anime,hitAndRespawn);
+
 		}
 
 		game.physics.arcade.overlap(player,scudi,pickUpScudi);
 		game.physics.arcade.overlap(player,collezionabili,pickUpColl);
-		game.physics.arcade.overlap(player,ippogrifo,tp);
+		game.physics.arcade.overlap(player,ippogrifo,tpmask);
 		game.physics.arcade.overlap(player,checkpoint,activateCp);
 
-		if(player.y > 1000){
-			oobKill(player);
-			isGameOver = true;	
-		}
 		
-		oobKill(lupi);
+		oobKill(player,true);
+		oobKill(lupi,false);
+		oobKill(meteore,false);
 		
 
 		//EFFETTO PARALLASSE
 		if(player.x <7500 ){
-		sfondo1.tilePosition.x = player.x * -0.1;
-		sfondo2.tilePosition.x = player.x * -0.3;
+		sfondo1.tilePosition.x = player.x * -0.05;
+		sfondo2.tilePosition.x = player.x * -0.13;
 		}else if(player.x >1024*10){
-			luna1.tilePosition.x = player.x * -0.1;
-			luna2.tilePosition.x = player.x * -0.3;
+			luna1.tilePosition.x = player.x * -0.05;
+			luna2.tilePosition.x = player.x * -0.13;
 		}
-	
+		
 		
 		
 
@@ -213,6 +236,30 @@ var groundlayer;
 		arciereSpara(arcieri.getChildAt(1),arco2,160);
 		arciereSpara(arcieri.getChildAt(2),arco3,180);
 		
+		
+		fallMeteora(meteore.getChildAt(0),-400,500,300);
+		fallMeteora(meteore.getChildAt(1),-300,200,400);
+		fallMeteora(meteore.getChildAt(2),-400,100,300);
+		fallMeteora(meteore.getChildAt(3),-600,100,400);
+		fallMeteora(meteore.getChildAt(4),-400,300,200);
+		
+		
+		if(anime.getChildAt(0).body.onFloor())
+			anime.getChildAt(0).body.velocity.y = -300;
+
+		if(anime.getChildAt(1).body.onFloor())
+			anime.getChildAt(1).body.velocity.y = -200;
+
+		if(anime.getChildAt(2).body.onFloor())
+			anime.getChildAt(2).body.velocity.y = -250;
+
+		if(anime.getChildAt(3).body.onFloor())
+			anime.getChildAt(3).body.velocity.y = -400;
+
+
+		gravityWell(11590,11750,-100);
+		if(player.x >11850)
+			gravityWell(12260,12715,-50);
 
 		for(var j=0; j<3;j++)
 		scudi.getChildAt(j).animations.play('mov');
@@ -228,15 +275,23 @@ var groundlayer;
 		if(isGameOver == true){
 			hp=1;
 			isGameOver = false;
+			//game.add.tween(maschera).to({alpha:1},1000, Phaser.Easing.Linear.None, true, 0, 0, false);
+			
 			game.state.restart();
+			game.time.events.add(Phaser.Timer.SECOND*1, fadeout, this);
 		}
 	}
 
 
-	function oobKill(entity){
-		if(entity.y > 1000){
+	function oobKill(entity, isPlayer){
+		if(entity.y > 1000 || entity.y < -100){
 			entity.kill();
+
+			if(isPlayer){
+				isGameOver = true;
+			}	
 		}
+		
 	}
 
 	
@@ -332,6 +387,8 @@ var groundlayer;
 		hitbox2.name = "spearLeft";
 		hitbox2.body.setSize(30,80,-50,-80);
 
+ 		/* 
+ 		---- FUNZIONE RIMOSSA ----
  		hitbox3 = hitboxes.create(0,0,null);
 		hitbox3.name = "spearUp";
 		hitbox3.body.setSize(60,30,-30,-110);
@@ -339,8 +396,8 @@ var groundlayer;
  		hitbox4 = hitboxes.create(0,0,null);
 		hitbox4.name = "spearDown";
 		hitbox4.body.setSize(60,30,-30,0);
-
-
+		*/
+	
  		
  		
  		
@@ -391,12 +448,13 @@ var groundlayer;
 				jumpTimer = game.time.now + 650;
 				player.animations.play("jumpnfall");
 			}
+		/* ---FEATURE RIMOSSA---
 		else if(game.input.keyboard.isDown(Phaser.Keyboard.S) && player.body.onFloor() == false && game.time.now > atkTimer +3000 )
 			{
 				player.body.velocity.y = -movVerticale;
 				player.animations.play("fall");
 			}
-
+		*/
 
 
 			//PERMETTE IL FLIP DELLE SPRITESHEET
@@ -423,6 +481,7 @@ var groundlayer;
 			game.physics.arcade.overlap(hitbox2,saraceni,spearLeftCollision);
 			game.physics.arcade.overlap(hitbox2,lupi,spearLeftCollision);
 			game.physics.arcade.overlap(hitbox2,arcieri,spearLeftCollision);
+			game.physics.arcade.overlap(hitbox2,anime,spearLeftCollision);
 			
 			
 		}
@@ -439,6 +498,7 @@ var groundlayer;
 				game.physics.arcade.overlap(hitbox1,saraceni,spearRightCollision);
 				game.physics.arcade.overlap(hitbox1,lupi,spearRightCollision);
 				game.physics.arcade.overlap(hitbox1,arcieri,spearRightCollision);
+				game.physics.arcade.overlap(hitbox1,anime,spearRightCollision);
 			
 		
 	/*	---FEATURE RIMOSSA ---
@@ -550,7 +610,7 @@ var groundlayer;
 		for(var i = 0; i<3;i++){
 		arcieri.getChildAt(i).scale.setTo(-scala,scala);
 		arcieri.getChildAt(i).anchor.setTo(0.5,1);
-		arcieri.getChildAt(i).animations.add('shoot',[0,1,2,3,4],6,false);
+		arcieri.getChildAt(i).animations.add('shoot',[0,1,2,3,4,5],3,false);
 		}
 
 		arcieri.setAll('smoothed',false);
@@ -599,17 +659,103 @@ var groundlayer;
 		}
 	}
 
+	function setMeteore() {
+		meteore = game.add.physicsGroup();
+
+		var meteora1 = meteore.create(12000,0,'meteora'); 
+		var meteora2 = meteore.create(13000,0,'meteora');
+		var meteora3 = meteore.create(14000,0,'meteora');
+		var meteora4 = meteore.create(15000,0,'meteora');
+		var meteora5 = meteore.create(15000,0,'meteora');
+		
+
+		for(var i = 0; i<5;i++){
+			meteore.getChildAt(i).scale.setTo(3);
+			meteore.getChildAt(i).anchor.setTo(0.5,1);
+			meteore.getChildAt(i).animations.add('burn',[0,1,2],6, true);
+		}
+
+		meteore.setAll('smoothed', false);
+
+		game.physics.enable(meteore, Phaser.Physics.ARCADE);
+
+		return meteore;
+	}
+	function fallMeteora(meteora,xGrav,yGrav, range){
+		var d;
+		
+		d = meteora.x - player.x - (range*3.5);
+		if(d <= -range ){
+			meteora.body.gravity.y = yGrav;
+			meteora.body.gravity.x = xGrav;
+			meteora.animations.play('burn');
+		}d
+	}
+
+	function setAnime(){
+		anime = game.add.physicsGroup();
+
+
+		
+		var anima1 = anime.create(11300,680,'anima'); 
+		var anima2 = anime.create(13090,464,'anima');
+		var anima3 = anime.create(14090,360,'anima');
+		var anima4 = anime.create(14820,680,'anima');
+
+		
+
+		for(var i = 0; i<4;i++){
+			anime.getChildAt(i).scale.setTo(scala);
+			anime.getChildAt(i).anchor.setTo(0.5,1);
+			anime.getChildAt(i).animations.add('idle',[0,1,2,3,4,5],12, true);
+			anime.getChildAt(i).animations.play('idle');
+		}
+
+		//anime.setAll('body.gravity.y',0);
+		anime.setAll('smoothed', false);
+
+		game.physics.enable(anime, Phaser.Physics.ARCADE);
+
+		anime.setAll('body.gravity.y', 200);
+		anime.setAll('body.outOfBoundsKill', false);
+		//anime.setAll('body.collideWorldBounds', true);
+
+		return anime;
+	}
+
+	
+	
+	function setBoss(){
+		boss = game.add.sprite(16200, 600, 'boss');
+		boss.scale.setTo(-5,5);
+		boss.anchor.setTo(0.5,1);
+		boss.smoothed = false;
+
+
+
+		game.physics.enable(boss, Phaser.Physics.ARCADE);
+		boss.body.gravity.y = grav;
+
+
+		
+		return boss;
+	}
+
+
 	function setScudi(){
 
 		scudi = game.add.physicsGroup();
 		var scudo1 = scudi.create(580,430,'scudo');
 		var scudo2 = scudi.create(2550,320,'scudo');
 		var scudo3 = scudi.create(4300,550,'scudo');
+		var scudo4 = scudi.create(9000,550,'scudo');
+		var scudo5 = scudi.create(13590,130,'scudo');
+		var scudo6 = scudi.create(14640,365,'scudo');
 		scudo1.animations.add('mov', [0,1,2,3,4],6,true);
 		scudo2.animations.add('mov', [0,1,2,3,4],6,true);
 		scudo3.animations.add('mov', [0,1,2,3,4],6,true);
 
-		for(var i = 0; i<3 ; i++)
+		for(var i = 0; i<6 ; i++)
 		scudi.getChildAt(i).anchor.setTo(0.5,0.5);
 
 		return scudi;
@@ -637,8 +783,8 @@ var groundlayer;
 		var pergamena1 = collezionabili.create(2020,120,'pergamena');
 		var pergamena2 = collezionabili.create(3136,385,'pergamena');
 		var pergamena3 = collezionabili.create(6070,120,'pergamena');
-		var pergamena4 = collezionabili.create(10000,600,'pergamena');
-		var pergamena5 = collezionabili.create(10000,600,'pergamena');
+		var pergamena4 = collezionabili.create(10777,120,'pergamena');
+		var pergamena5 = collezionabili.create(12405,620,'pergamena');
 
 		for(var i=0; i<5;i++){
 		collezionabili.getChildAt(i).animations.add('mov', [0,1,2,3],6,true);
@@ -714,6 +860,7 @@ var groundlayer;
 
 		
 	}
+
 	function setIppogrifo(){
 		ippogrifo = game.add.sprite(7860, 100, 'ippogrifo');
 		ippogrifo.scale.setTo(scala);
@@ -724,10 +871,24 @@ var groundlayer;
 
 		return ippogrifo;
 	}
-	function tp(){
-		player.x = 1024*10;
-		player.y = 550;
+
+	//CAMBIO LIVELLO CON FADE OUT
+	function tpmask(player, ippogrifo){
+		game.add.tween(maschera).to({alpha:1},200, Phaser.Easing.Linear.None, true, 0, 0, false);
+		game.time.events.add(Phaser.Timer.SECOND*1, tp, this);
 	}
+	function tp(){
+		player.x = 1024*10+100;
+		player.y = 550;
+		game.time.events.add(Phaser.Timer.SECOND*1, fadeout, this);
+	}
+	function fadeout(){
+		game.add.tween(maschera).to({alpha:0},1000, Phaser.Easing.Linear.None, true, 0, 0, false);
+	}
+
+
+
+
 
 	function setCheckpoint(){
 		checkpoint = game.add.physicsGroup();
@@ -739,7 +900,7 @@ var groundlayer;
 		checkpoint.getChildAt(0).smoothed = false;
 		checkpoint.getChildAt(0).anchor.setTo(0.5,1);
 		checkpoint.getChildAt(0).animations.add('idle',[0,1,2,3,4],12,true);
-		checkpoint.getChildAt(0).animations.add('check',[5,6,7,8,9,10,11],6,false);
+		checkpoint.getChildAt(0).animations.add('check',[5,6,7,8,9,10,11,7,6,5],6,false);
 
 		var cp2 = game.add.sprite(4050,650,'checkpoint');
 
@@ -748,7 +909,34 @@ var groundlayer;
 		checkpoint.getChildAt(1).smoothed = false;
 		checkpoint.getChildAt(1).anchor.setTo(0.5,1);
 		checkpoint.getChildAt(1).animations.add('idle',[0,1,2,3,4],12,true);
-		checkpoint.getChildAt(1).animations.add('check',[5,6,7,8,9,10,11],6,false);
+		checkpoint.getChildAt(1).animations.add('check',[5,6,7,8,9,10,11,7,6,5],6,false);
+
+		var cp3 = game.add.sprite(10320,650,'checkpoint');
+
+		checkpoint.add(cp3);
+		checkpoint.getChildAt(2).scale.setTo(3);
+		checkpoint.getChildAt(2).smoothed = false;
+		checkpoint.getChildAt(2).anchor.setTo(0.5,1);
+		checkpoint.getChildAt(2).animations.add('idle',[0,1,2,3,4],12,true);
+		checkpoint.getChildAt(2).animations.add('check',[5,6,7,8,9,10,11,7,6,5],6,false);
+
+		var cp4 = game.add.sprite(12800,460,'checkpoint');
+
+		checkpoint.add(cp4);
+		checkpoint.getChildAt(3).scale.setTo(3);
+		checkpoint.getChildAt(3).smoothed = false;
+		checkpoint.getChildAt(3).anchor.setTo(0.5,1);
+		checkpoint.getChildAt(3).animations.add('idle',[0,1,2,3,4],12,true);
+		checkpoint.getChildAt(3).animations.add('check',[5,6,7,8,9,10,11,7,6,5],6,false);
+
+		var cp5 = game.add.sprite(14930,680,'checkpoint');
+
+		checkpoint.add(cp5);
+		checkpoint.getChildAt(4).scale.setTo(3);
+		checkpoint.getChildAt(4).smoothed = false;
+		checkpoint.getChildAt(4).anchor.setTo(0.5,1);
+		checkpoint.getChildAt(4).animations.add('idle',[0,1,2,3,4],12,true);
+		checkpoint.getChildAt(4).animations.add('check',[5,6,7,8,9,10,11,7,6,5],6,false);
 		
 
 
@@ -760,11 +948,19 @@ var groundlayer;
 
 	function activateCp(player,cp){
 		
-		cp.animations.play('check');
+		//cp.animations.play('check');
 		
 
 		playerSpawnPoint[0] = cp.x;
 		playerSpawnPoint[1] = cp.y;
+	}
+	function gravityWell(x1,x2, g){
+		if(player.x > x1 && player.x < x2){
+			player.body.gravity.y = g;
+		}
+		else{
+			player.body.gravity.y  = grav;
+		}
 	}
 
 	function render(){
@@ -775,8 +971,10 @@ var groundlayer;
 		game.debug.physicsGroup(arcieri,'rgba(255,0,0,0.3)');
 		game.debug.physicsGroup(hitboxes,'rgba(0,170,255,0.3)');
 		game.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');
-		game.debug.physicsGroup(arco,'rgba(255,0,0,0.3)');
-		game.debug.physicsGroup(collezionabili,'rgba(255,255,0,0.3)');*/
+		game.debug.physicsGroup(meteore,'rgba(255,0,0,0.3)');
+		game.debug.physicsGroup(anime,'rgba(255,0,0,0.3)');
+		game.debug.physicsGroup(collezionabili,'rgba(255,255,0,0.3)');
+		*/
 
 		game.debug.text("x:" + player.x, 400,15);
 		game.debug.text("y:" + player.y, 400,30);
