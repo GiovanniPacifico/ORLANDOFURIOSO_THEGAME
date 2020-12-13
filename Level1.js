@@ -25,13 +25,15 @@ var game = new Phaser.Game(1024,768, Phaser.AUTO,'ORLANDOFURIOSO',{preload: prel
 		game.load.spritesheet('scudo', 'assets/scudo_anim.png',25,35,5);
 		game.load.spritesheet('tutorialmov','assets/uparrow.png',27,28,5);
 		game.load.spritesheet('arciere','assets/arciere_spritesheet.png',26,37,6);
-		game.load.spritesheet('freccia','assets/freccia.png',30,6,1);
+		game.load.spritesheet('freccia','assets/freccia.png',39,11,1);
 		game.load.spritesheet('meteora','assets/meteora.png',23,23,3);
 		game.load.spritesheet('pergamena','assets/pergamena.png',19,23,5);
 		game.load.spritesheet('ippogrifo','assets/ippogrifo.png',51,50,1);
 		game.load.spritesheet('checkpoint','assets/checkpoint.png',30,36,1);
 		game.load.spritesheet('anima','assets/anima.png',23,31,6);
 		game.load.spritesheet('boss','assets/boss.png',21,40,1);
+		game.load.spritesheet('spada','assets/spada_infuocata_grossa.png',60,22,3);
+		game.load.spritesheet('senno', 'assets/senno.png',16,33,1);
 		//tilemap loading
 		game.load.tilemap('map', 'assets/foresta.json', null, Phaser.Tilemap.TILED_JSON);
 		game.load.image('tiles', 'assets/tileset-foresta.png');
@@ -64,7 +66,14 @@ var meteore;
 var anime;
 
 var boss;
-var swings;
+var bosshead;
+var spada;
+var nS = 200; //numero di spade
+var sS = 500; //velocità di spade
+var dS = 2000; //delay di spade
+var spS = [0,0];
+
+var senno;
 
 var ippogrifo;
 
@@ -90,7 +99,7 @@ var movOrizzontale = 160; //movimento orizzontale
 var movVerticale = -420; //movimento verticale (salto o caduta rapida)
 var jumpTimer = 0; 
 var atkTimer = 0;
-let playerSpawnPoint = [100,550]; //x e y del punto di spawn del player
+let playerSpawnPoint = [100,600]; //x e y del punto di spawn del player
 var isInvincible = false;
 
 //variabili di sfondo e mappa
@@ -151,6 +160,7 @@ var groundlayer;
 		setMeteore();
 		setAnime();
 		setBoss();
+		setSpada();
 
 		for(var i = 0; i<collPresi; i++){
 				pergGroup.getChildAt(i).tint = 0xFFFFFF;
@@ -158,8 +168,10 @@ var groundlayer;
 				}
 	
 		maschera = game.add.image(0,0, 'maschera');
-		maschera.alpha = 0;
+		maschera.alpha = 1;
 		maschera.fixedToCamera = true;
+		fadeout(3000);
+
 	}
 
 	function update(){
@@ -189,6 +201,7 @@ var groundlayer;
 		game.physics.arcade.overlap(player,arco3.bullets,hitAndRespawn);
 		game.physics.arcade.overlap(player,meteore,hitAndRespawn);
 		game.physics.arcade.overlap(player,anime,hitAndRespawn);
+		game.physics.arcade.overlap(player,spada.bullets,hitAndRespawn);
 
 		}
 
@@ -219,6 +232,29 @@ var groundlayer;
 		playermovement();
 		playerAtkDirection();
 		
+
+		//COMPARSA DEL SENNO
+		if(collPresi == 5){
+			game.add.tween(senno).to({alpha:1},200, Phaser.Easing.Linear.None, true, 0, 0, false);
+		}
+		//FINALE ALTERNATIVO
+		if(collPresi == 5 && boss.alive == false){
+			var text = game.add.text(15890,400,"HAI VINTO CON IL SENNO!",{
+				font: "30px Helvetica",
+				fill: "#F1F1f1",
+				align: "center"
+			});
+			text.anchor.setTo(0.5,1);
+		}
+		else if(collPresi != 5 && boss.alive == false){
+			var text = game.add.text(15890,400,"HAI VINTO SENZA SENNO!",{
+				font: "30px Helvetica",
+				fill: "#F1F1f1",
+				align: "center"
+			});
+			text.anchor.setTo(0.5,1);
+		}
+
 		
 		movimentoSaraceno(2840,3200,saraceni.getChildAt(0));
 		movimentoSaraceno(3065,3200,saraceni.getChildAt(1));
@@ -243,7 +279,9 @@ var groundlayer;
 		fallMeteora(meteore.getChildAt(3),-600,100,400);
 		fallMeteora(meteore.getChildAt(4),-400,300,200);
 		
-		
+		bossSwing(150);
+
+
 		if(anime.getChildAt(0).body.onFloor())
 			anime.getChildAt(0).body.velocity.y = -300;
 
@@ -275,13 +313,14 @@ var groundlayer;
 		if(isGameOver == true){
 			hp=1;
 			isGameOver = false;
-			//game.add.tween(maschera).to({alpha:1},1000, Phaser.Easing.Linear.None, true, 0, 0, false);
-			
-			game.state.restart();
-			game.time.events.add(Phaser.Timer.SECOND*1, fadeout, this);
+			fadein();
+			game.time.events.add(300,restart,this);
 		}
 	}
-
+	function restart(){
+		game.state.restart();
+		
+	}
 
 	function oobKill(entity, isPlayer){
 		if(entity.y > 1000 || entity.y < -100){
@@ -297,12 +336,23 @@ var groundlayer;
 	
 	function spearLeftCollision(hitboxes, enemy){
 		game.camera.shake(0.005,200,true,Phaser.Camera.SHAKE_HORIZONTAL,true);
-			enemy.kill();
+			enemy.tint = 0xFF4455;
+			enemy.body.enable = false;
+			game.time.events.add(300, enemyDeath, this, enemy);
+			
 	}
 	function spearRightCollision(hitboxes, enemy){
 		game.camera.shake(0.005,200,true,Phaser.Camera.SHAKE_HORIZONTAL,true);
-			enemy.kill();
+			enemy.tint = 0xFF4455;
+			enemy.body.enable = false;
+			game.time.events.add(300, enemyDeath, this, enemy);
+			
 	}
+	
+	function enemyDeath(enemy){
+		enemy.kill();
+	}
+	
 	/* -----FUNZIONE RIMOSSA----
 	function spearDownCollision(hitboxes, enemy){
 		
@@ -387,6 +437,12 @@ var groundlayer;
 		hitbox2.name = "spearLeft";
 		hitbox2.body.setSize(30,80,-50,-80);
 
+
+		senno = hitboxes.create(-5,-70,'senno');
+		senno.alpha = 0;
+		senno.name = "senno";
+	
+		 
  		/* 
  		---- FUNZIONE RIMOSSA ----
  		hitbox3 = hitboxes.create(0,0,null);
@@ -399,15 +455,8 @@ var groundlayer;
 		*/
 	
  		
- 		
- 		
- 		
- 		
-
-
-		
-
- 		 return player;
+		return senno;
+ 		return player;
 	}
 
 
@@ -482,6 +531,7 @@ var groundlayer;
 			game.physics.arcade.overlap(hitbox2,lupi,spearLeftCollision);
 			game.physics.arcade.overlap(hitbox2,arcieri,spearLeftCollision);
 			game.physics.arcade.overlap(hitbox2,anime,spearLeftCollision);
+			game.physics.arcade.overlap(hitbox2,boss,spearLeftCollision);
 			
 			
 		}
@@ -499,6 +549,7 @@ var groundlayer;
 				game.physics.arcade.overlap(hitbox1,lupi,spearRightCollision);
 				game.physics.arcade.overlap(hitbox1,arcieri,spearRightCollision);
 				game.physics.arcade.overlap(hitbox1,anime,spearRightCollision);
+				game.physics.arcade.overlap(hitbox1,boss,spearRightCollision);
 			
 		
 	/*	---FEATURE RIMOSSA ---
@@ -671,11 +722,17 @@ var groundlayer;
 
 		for(var i = 0; i<5;i++){
 			meteore.getChildAt(i).scale.setTo(3);
-			meteore.getChildAt(i).anchor.setTo(0.5,1);
+			meteore.getChildAt(i).anchor.setTo(0,0);
 			meteore.getChildAt(i).animations.add('burn',[0,1,2],6, true);
 		}
 
 		meteore.setAll('smoothed', false);
+		meteora1.body.setCircle(11);
+		meteora2.body.setCircle(11);
+		meteora3.body.setCircle(11);
+		meteora4.body.setCircle(11);
+		meteora5.body.setCircle(11);
+
 
 		game.physics.enable(meteore, Phaser.Physics.ARCADE);
 
@@ -736,11 +793,36 @@ var groundlayer;
 		game.physics.enable(boss, Phaser.Physics.ARCADE);
 		boss.body.gravity.y = grav;
 
-
 		
 		return boss;
 	}
+	function setSpada(){
+		spada = game.add.weapon(nS, 'spada');
+		spada.bulletLifespan = 5000;
+		spada.bulletKillType = Phaser.Weapon.KILL_LIFESPAN;
+		spada.fireRate = dS;
+		spada.bulletSpeed = sS;
+		spada.bulletRotateToVelocity = true;
+		spada.addBulletAnimation('fire',[0,1,2],6,true);
 
+		
+
+		return spada;
+	}
+
+	function bossSwing(range){
+		var d;
+		d = boss.x - player.x - (range*3.5);
+
+		if(boss.alive && d <= range){
+		//boss.animations.play('atk');
+		spada.trackSprite(boss,-50,-100,false);
+		spada.fireAngle = 180;
+		spada.fireAtXY(player.x,player.y-50);
+		spada.fire();		
+		}
+
+	}
 
 	function setScudi(){
 
@@ -749,8 +831,8 @@ var groundlayer;
 		var scudo2 = scudi.create(2550,320,'scudo');
 		var scudo3 = scudi.create(4300,550,'scudo');
 		var scudo4 = scudi.create(9000,550,'scudo');
-		var scudo5 = scudi.create(13590,130,'scudo');
-		var scudo6 = scudi.create(14640,365,'scudo');
+		var scudo5 = scudi.create(13590,120,'scudo');
+		var scudo6 = scudi.create(14640,360,'scudo');
 		scudo1.animations.add('mov', [0,1,2,3,4],6,true);
 		scudo2.animations.add('mov', [0,1,2,3,4],6,true);
 		scudo3.animations.add('mov', [0,1,2,3,4],6,true);
@@ -861,6 +943,7 @@ var groundlayer;
 		
 	}
 
+
 	function setIppogrifo(){
 		ippogrifo = game.add.sprite(7860, 100, 'ippogrifo');
 		ippogrifo.scale.setTo(scala);
@@ -874,19 +957,21 @@ var groundlayer;
 
 	//CAMBIO LIVELLO CON FADE OUT
 	function tpmask(player, ippogrifo){
-		game.add.tween(maschera).to({alpha:1},200, Phaser.Easing.Linear.None, true, 0, 0, false);
+		fadein();
 		game.time.events.add(Phaser.Timer.SECOND*1, tp, this);
 	}
 	function tp(){
 		player.x = 1024*10+100;
-		player.y = 550;
-		game.time.events.add(Phaser.Timer.SECOND*1, fadeout, this);
+		player.y = 650;
+		game.time.events.add(Phaser.Timer.SECOND*1, fadeout, this,1000);
 	}
-	function fadeout(){
-		game.add.tween(maschera).to({alpha:0},1000, Phaser.Easing.Linear.None, true, 0, 0, false);
+	
+	function fadein(){
+		game.add.tween(maschera).to({alpha:1},200, Phaser.Easing.Linear.None, true, 0, 0, false);
 	}
-
-
+	function fadeout(ftime){
+		game.add.tween(maschera).to({alpha:0},ftime, Phaser.Easing.Linear.None, true, 0, 0, false);
+	}
 
 
 
@@ -970,11 +1055,12 @@ var groundlayer;
 		game.debug.physicsGroup(lupi,'rgba(255,0,0,0.3)');
 		game.debug.physicsGroup(arcieri,'rgba(255,0,0,0.3)');
 		game.debug.physicsGroup(hitboxes,'rgba(0,170,255,0.3)');
-		game.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');
+		game.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');*/
 		game.debug.physicsGroup(meteore,'rgba(255,0,0,0.3)');
 		game.debug.physicsGroup(anime,'rgba(255,0,0,0.3)');
 		game.debug.physicsGroup(collezionabili,'rgba(255,255,0,0.3)');
-		*/
+		
+		
 
 		game.debug.text("x:" + player.x, 400,15);
 		game.debug.text("y:" + player.y, 400,30);
