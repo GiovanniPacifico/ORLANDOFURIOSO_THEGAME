@@ -14,8 +14,11 @@ var game = new Phaser.Game(1024,768, Phaser.AUTO,'ORLANDOFURIOSO',{preload: prel
 		game.load.image('luna3', 'assets/luna3p.png'); 
 		game.load.image('luna4', 'assets/luna4.png');
 		game.load.image('maschera','assets/maschera.png'); 
-
-
+		game.load.image('perg1','assets/Pergamena_Bosco_1.png');
+		game.load.image('perg2','assets/Pergamena_Bosco_2.png');
+		game.load.image('perg3','assets/Pergamena_Bosco_3.png');
+		game.load.image('perg4','assets/Pergamena_Luna_1.png');
+		game.load.image('perg5','assets/Pergamena_Luna_2.png');
 
 		
 		game.load.spritesheet('astolfo', 'assets/astolfo_spritesheet.png',21,40,29); //carica lo sprite di astolfo
@@ -29,14 +32,20 @@ var game = new Phaser.Game(1024,768, Phaser.AUTO,'ORLANDOFURIOSO',{preload: prel
 		game.load.spritesheet('meteora','assets/meteora.png',23,23,3);
 		game.load.spritesheet('pergamena','assets/pergamena.png',19,23,5);
 		game.load.spritesheet('ippogrifo','assets/ippogrifo.png',51,50,1);
-		game.load.spritesheet('checkpoint','assets/checkpoint.png',30,36,1);
+		game.load.spritesheet('checkpoint','assets/bandiera_sprite.png',22,37,15);
 		game.load.spritesheet('anima','assets/anima.png',23,31,6);
-		game.load.spritesheet('boss','assets/boss.png',21,40,1);
+		game.load.spritesheet('boss','assets/Orlando_sprite.png',20,37,22);
 		game.load.spritesheet('spada','assets/spada_infuocata_grossa.png',60,22,3);
-		game.load.spritesheet('senno', 'assets/senno.png',16,33,1);
+		game.load.spritesheet('senno', 'assets/senno_sps.png',22,32,7);
+		game.load.spritesheet('buco1','assets/pozzo2_sprite_scuro.png',160,768,10);
+		game.load.spritesheet('buco2','assets/pozzo1_sprite_scuro.png',455,768,10);
+
+
 		//tilemap loading
 		game.load.tilemap('map', 'assets/foresta.json', null, Phaser.Tilemap.TILED_JSON);
 		game.load.image('tiles', 'assets/tileset-foresta.png');
+
+
 	}
 //hitboxes del giocatore
 var player;
@@ -64,16 +73,19 @@ var dFrecce = 2000; //delay di frecce
 var meteore;
 
 var anime;
+var pozzo1;
+var pozzo2;
 
 var boss;
 var bosshead;
 var spada;
 var nS = 200; //numero di spade
 var sS = 500; //velocità di spade
-var dS = 2000; //delay di spade
+var dS = 1800; //delay di spade
 var spS = [0,0];
 
 var senno;
+var sennoInizio;
 
 var ippogrifo;
 
@@ -90,6 +102,22 @@ var nCP = 4;
 var collezionabili;
 var nCollezionabili = 5;
 var collPresi = 0;
+
+/*var frasi = [	"Dimentica il cervello e ascolta il cuore",
+ 				"Il mio cuore è e sarà sempre tuo.",
+ 				"Se ti amo così male, è perché ti amo troppo",
+				"Mi mandi su, nello spazio, poi mi lasci giù, nello strazio",
+				"Con i tuoi baci, ho disegnato il mio cielo stellato"];
+var fraseLove;*/
+
+var frase1;
+var frase2;
+var frase3;
+var frase4;
+var frase5;
+
+
+
 var isGoodEnding = false;
 
 var grav = 500;
@@ -146,7 +174,7 @@ var groundlayer;
 		groundlayer.resizeWorld(); 
 
 		
-		
+		setgWell();
 		setHUD();
 		setPlayer();
 		setLupi();
@@ -161,6 +189,7 @@ var groundlayer;
 		setAnime();
 		setBoss();
 		setSpada();
+		setSennoI();
 
 		for(var i = 0; i<collPresi; i++){
 				pergGroup.getChildAt(i).tint = 0xFFFFFF;
@@ -172,6 +201,44 @@ var groundlayer;
 		maschera.fixedToCamera = true;
 		fadeout(3000);
 
+		frase1 = game.add.image(512,384,'perg1');
+		frase1.alpha = 0;
+		frase1.anchor.setTo(0.5,0.5);
+		frase1.scale.setTo(0.18);
+		frase1.fixedToCamera = true;
+
+
+		frase2 = game.add.image(512,384,'perg2');
+		frase2.alpha = 0;
+		frase2.anchor.setTo(0.5,0.5);
+		frase2.scale.setTo(0.18);
+		frase2.fixedToCamera = true;
+
+		frase3 = game.add.image(512,384,'perg3');
+		frase3.alpha = 0;
+		frase3.anchor.setTo(0.5,0.5);
+		frase3.scale.setTo(0.18);
+		frase3.fixedToCamera = true;
+
+		frase4 = game.add.image(512,384,'perg4');
+		frase4.alpha = 0;
+		frase4.anchor.setTo(0.5,0.5);
+		frase4.scale.setTo(0.18);
+		frase4.fixedToCamera = true;
+
+
+		frase5 = game.add.image(512,384,'perg5');
+		frase5.alpha = 0;
+		frase5.anchor.setTo(0.5,0.5);
+		frase5.scale.setTo(0.18);
+		frase5.fixedToCamera = true;
+
+
+		
+		game.time.events.add(10,uncheck,this,checkpoint.getChildAt(0));
+		game.time.events.add(10,uncheck,this,checkpoint.getChildAt(1));
+		game.time.events.add(10,uncheck,this,checkpoint.getChildAt(2));
+		game.time.events.add(10,uncheck,this,checkpoint.getChildAt(3));
 	}
 
 	function update(){
@@ -195,7 +262,7 @@ var groundlayer;
 		if(isInvincible == false){
 		game.physics.arcade.overlap(player,saraceni,hitAndRespawn);
 		game.physics.arcade.overlap(player,lupi,hitAndRespawn);
-		game.physics.arcade.overlap(player,arcieri,hitAndRespawn);
+		//game.physics.arcade.overlap(player,arcieri,hitAndRespawn);
 		game.physics.arcade.overlap(player,arco.bullets,hitAndRespawn);
 		game.physics.arcade.overlap(player,arco2.bullets,hitAndRespawn);
 		game.physics.arcade.overlap(player,arco3.bullets,hitAndRespawn);
@@ -208,7 +275,11 @@ var groundlayer;
 		game.physics.arcade.overlap(player,scudi,pickUpScudi);
 		game.physics.arcade.overlap(player,collezionabili,pickUpColl);
 		game.physics.arcade.overlap(player,ippogrifo,tpmask);
-		game.physics.arcade.overlap(player,checkpoint,activateCp);
+		game.physics.arcade.overlap(player,checkpoint.getChildAt(0),activateCp);
+		game.physics.arcade.overlap(player,checkpoint.getChildAt(1),activateCp);
+		game.physics.arcade.overlap(player,checkpoint.getChildAt(2),activateCp);
+		game.physics.arcade.overlap(player,checkpoint.getChildAt(3),activateCp);
+	
 
 		
 		oobKill(player,true);
@@ -231,11 +302,12 @@ var groundlayer;
 
 		playermovement();
 		playerAtkDirection();
-		
+		sennoFlyAway(30,5000);
 
 		//COMPARSA DEL SENNO
 		if(collPresi == 5){
 			game.add.tween(senno).to({alpha:1},200, Phaser.Easing.Linear.None, true, 0, 0, false);
+			senno.animations.play('idle');
 		}
 		//FINALE ALTERNATIVO
 		if(collPresi == 5 && boss.alive == false){
@@ -305,21 +377,47 @@ var groundlayer;
 		for(var i=0; i<5;i++)
 		collezionabili.getChildAt(i).animations.play('mov');
 
+
 		
-		checkpoint.getChildAt(0).animations.play('idle');
-		checkpoint.getChildAt(1).animations.play('idle');
 		
 
 		if(isGameOver == true){
 			hp=1;
 			isGameOver = false;
 			fadein();
+
+				
 			game.time.events.add(300,restart,this);
+		
 		}
 	}
+
+// FUNZIONI
+	/*  Codice di prova per tenere le bandierine svolazzanti dopo il restart, non funziona però
+
+		if(playerSpawnPoint[0] == checkpoint.getChildAt(3).x){
+			wind(checkpoint.getChildAt(3));
+			}
+				else if(playerSpawnPoint[0] == checkpoint.getChildAt(2).x){
+					wind(checkpoint.getChildAt(2));
+				}
+					else if(playerSpawnPoint[0] == checkpoint.getChildAt(1).x){
+						wind(checkpoint.getChildAt(1));
+					}
+						else if(playerSpawnPoint[0] == checkpoint.getChildAt(0).x){
+							wind(checkpoint.getChildAt(0));
+						}
+						else{
+							uncheck(checkpoint.getChildAt(0));
+							uncheck(checkpoint.getChildAt(1));
+							uncheck(checkpoint.getChildAt(2));
+							uncheck(checkpoint.getChildAt(3));
+						}*/
+
 	function restart(){
+
+
 		game.state.restart();
-		
 	}
 
 	function oobKill(entity, isPlayer){
@@ -438,8 +536,10 @@ var groundlayer;
 		hitbox2.body.setSize(30,80,-50,-80);
 
 
-		senno = hitboxes.create(-5,-70,'senno');
+		senno = hitboxes.create(-35,-35,'senno');
 		senno.alpha = 0;
+		senno.smoothed = false;
+		senno.animations.add('idle',[0,1,2,3,4,5,6],6,true);
 		senno.name = "senno";
 	
 		 
@@ -459,7 +559,39 @@ var groundlayer;
  		return player;
 	}
 
+	function setSennoI(){
+		sennoInizio = game.add.sprite(260,600,'senno');
+		sennoInizio.animations.add('idle',[0,1,2,3,4,5,6],6,true);
+		sennoInizio.scale.setTo(scala);
+		sennoInizio.anchor.setTo(0.5,1);
+		sennoInizio.smoothed = false;
+		game.physics.enable(sennoInizio);
+		sennoInizio.animations.play('idle');
 
+		return sennoInizio;
+	}
+
+	function sennoFlyAway(range,timeAlive){
+		sennoInizio.body.velocity.x = 0;
+		
+		var d;
+		d = sennoInizio.x - player.x - (range*3.5);
+		var firstInRange = false;
+		
+		if(d <= range && !firstInRange){
+			firstInRange = true;
+			sennoInizio.body.gravity.x = 15000;
+			sennoInizio.body.gravity.y = -100;
+
+			game.time.events.add(timeAlive,enemyDeath,this,sennoInizio);
+		}
+		else if(firstInRange){
+			sennoInizio.body.gravity.x = 15000;
+			sennoInizio.body.gravity.y = -100;
+		}
+
+		
+	}
 	//FUNZIONE MOVIMENTI
 	function playermovement(){
 		player.body.velocity.x = 0; //resetta la velocità orizzontale
@@ -512,6 +644,8 @@ var groundlayer;
 			if(facing === "right")
 			player.scale.setTo(scala,scala);
 	}
+
+
 
 	//FUNZIONE DI ATTACCO MULTIDIREZIONALE
 	function playerAtkDirection(){
@@ -746,7 +880,7 @@ var groundlayer;
 			meteora.body.gravity.y = yGrav;
 			meteora.body.gravity.x = xGrav;
 			meteora.animations.play('burn');
-		}d
+		}
 	}
 
 	function setAnime(){
@@ -787,7 +921,7 @@ var groundlayer;
 		boss.scale.setTo(-5,5);
 		boss.anchor.setTo(0.5,1);
 		boss.smoothed = false;
-
+		boss.animations.add('atk',[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21],6,true);
 
 
 		game.physics.enable(boss, Phaser.Physics.ARCADE);
@@ -811,6 +945,7 @@ var groundlayer;
 	}
 
 	function bossSwing(range){
+		boss.animations.play('atk');
 		var d;
 		d = boss.x - player.x - (range*3.5);
 
@@ -884,11 +1019,58 @@ var groundlayer;
 				pergGroup.getChildAt(collPresi).tint = 0xFFFFFF;
 				coll.kill();
 				collPresi++;
+					if(collPresi == 1){
+						game.time.events.add(10,showText,this);
+						game.time.events.add(2000,hideText,this);}
+					if(collPresi == 2){
+						game.time.events.add(10,showText,this);
+						game.time.events.add(2000,hideText,this);}
+					if(collPresi == 3){
+						game.time.events.add(10,showText,this);
+						game.time.events.add(2000,hideText,this);}
+					if(collPresi == 4){
+						game.time.events.add(10,showText,this);
+						game.time.events.add(2000,hideText,this);}
 				}
 			if(collPresi == nCollezionabili){
+					game.time.events.add(10,showText,this);
+					game.time.events.add(2000,hideText,this);
 				isGoodEnding = true;
 			}
 		}
+	function showText(){
+		//fraseLove.text = text;
+		//game.add.tween(fraseLove).to({alpha:1},500, Phaser.Easing.Linear.None, true, 0, 0, false);
+
+		if(collPresi == 1)
+		game.add.tween(frase1).to({alpha:1},500,Phaser.Easing.Linear.None,true,0,0,false);
+		if(collPresi == 2)
+		game.add.tween(frase2).to({alpha:1},500,Phaser.Easing.Linear.None,true,0,0,false);
+		if(collPresi == 3)
+		game.add.tween(frase3).to({alpha:1},500,Phaser.Easing.Linear.None,true,0,0,false);
+		if(collPresi == 4)
+		game.add.tween(frase4).to({alpha:1},500,Phaser.Easing.Linear.None,true,0,0,false);
+		if(collPresi == 5)
+		game.add.tween(frase5).to({alpha:1},500,Phaser.Easing.Linear.None,true,0,0,false);
+	}
+	function hideText(){
+		//game.add.tween(fraseLove).to({alpha:0},500, Phaser.Easing.Linear.None, true, 0, 0, false);
+		if(collPresi == 1){
+		game.add.tween(frase1).to({alpha:0},500, Phaser.Easing.Linear.None, true, 0, 0, false);
+		}
+		if(collPresi == 2){
+		game.add.tween(frase2).to({alpha:0},500, Phaser.Easing.Linear.None, true, 0, 0, false)
+		}
+		if(collPresi == 3){
+		game.add.tween(frase3).to({alpha:0},500, Phaser.Easing.Linear.None, true, 0, 0, false);
+		}
+		if(collPresi == 4){
+		game.add.tween(frase4).to({alpha:0},500, Phaser.Easing.Linear.None, true, 0, 0, false);
+		}
+		if(collPresi == 5){
+		game.add.tween(frase5).to({alpha:0},500, Phaser.Easing.Linear.None, true, 0, 0, false);
+		}
+	}
 
 
 
@@ -931,10 +1113,19 @@ var groundlayer;
 		tutorialmov.scale.setTo(2);
 		tutorialmov.smoothed = false;
 		game.time.events.add(Phaser.Timer.SECOND * 5, function killTutorial(){tutorialmov.kill();},this);
-*/
+*/		
+
+		fraseLove = game.add.text(512,700,"placeholder",{
+				font: "30px Helvetica",
+				fill: "#F1F1f1",
+				align: "center",
+				backgroundColor: "rgba(10,10,10,0.4)"});
+		fraseLove.anchor.setTo(0.5,1);
+		fraseLove.alpha = 0;
 
 		hud.add(pergGroup);
 		hud.add(hpviz);
+		hud.add(fraseLove);
 		hud.fixedToCamera = true;
 		hud.cameraOffset.setTo(10,10);
 
@@ -977,51 +1168,51 @@ var groundlayer;
 
 	function setCheckpoint(){
 		checkpoint = game.add.physicsGroup();
-
+		
+		//Primo Checkpoint Foresta
 		var cp1 = game.add.sprite(1617,650,'checkpoint');
 
 		checkpoint.add(cp1);
 		checkpoint.getChildAt(0).scale.setTo(3);
 		checkpoint.getChildAt(0).smoothed = false;
 		checkpoint.getChildAt(0).anchor.setTo(0.5,1);
-		checkpoint.getChildAt(0).animations.add('idle',[0,1,2,3,4],12,true);
-		checkpoint.getChildAt(0).animations.add('check',[5,6,7,8,9,10,11,7,6,5],6,false);
+		checkpoint.getChildAt(0).animations.add('idle',[0,1,2,3],6,true);
+		checkpoint.getChildAt(0).animations.add('check',[4,5,6,7],6,false);
+		checkpoint.getChildAt(0).animations.add('wind',[8,9,10,11,12,13,14],6,true);
 
+		//Secondo Checkpoint Foresta 
 		var cp2 = game.add.sprite(4050,650,'checkpoint');
 
 		checkpoint.add(cp2);
 		checkpoint.getChildAt(1).scale.setTo(3);
 		checkpoint.getChildAt(1).smoothed = false;
 		checkpoint.getChildAt(1).anchor.setTo(0.5,1);
-		checkpoint.getChildAt(1).animations.add('idle',[0,1,2,3,4],12,true);
-		checkpoint.getChildAt(1).animations.add('check',[5,6,7,8,9,10,11,7,6,5],6,false);
+		checkpoint.getChildAt(1).animations.add('idle',[0,1,2,3],6,true);
+		checkpoint.getChildAt(1).animations.add('check',[4,5,6,7],6,false);
+		checkpoint.getChildAt(1).animations.add('wind',[8,9,10,11,12,13,14],6,true);
 
+		//Primo Checkpoint Luna 
 		var cp3 = game.add.sprite(10320,650,'checkpoint');
 
 		checkpoint.add(cp3);
 		checkpoint.getChildAt(2).scale.setTo(3);
 		checkpoint.getChildAt(2).smoothed = false;
 		checkpoint.getChildAt(2).anchor.setTo(0.5,1);
-		checkpoint.getChildAt(2).animations.add('idle',[0,1,2,3,4],12,true);
-		checkpoint.getChildAt(2).animations.add('check',[5,6,7,8,9,10,11,7,6,5],6,false);
+		checkpoint.getChildAt(2).animations.add('idle',[0,1,2,3],6,true);
+		checkpoint.getChildAt(2).animations.add('check',[4,5,6,7],6,false);
+		checkpoint.getChildAt(2).animations.add('wind',[8,9,10,11,12,13,14],6,true);
 
+		//Secondo Checpoint Luna
 		var cp4 = game.add.sprite(12800,460,'checkpoint');
 
 		checkpoint.add(cp4);
 		checkpoint.getChildAt(3).scale.setTo(3);
 		checkpoint.getChildAt(3).smoothed = false;
 		checkpoint.getChildAt(3).anchor.setTo(0.5,1);
-		checkpoint.getChildAt(3).animations.add('idle',[0,1,2,3,4],12,true);
-		checkpoint.getChildAt(3).animations.add('check',[5,6,7,8,9,10,11,7,6,5],6,false);
+		checkpoint.getChildAt(3).animations.add('idle',[0,1,2,3],6,true);
+		checkpoint.getChildAt(3).animations.add('check',[4,5,6,7],6,false);
+		checkpoint.getChildAt(3).animations.add('wind',[8,9,10,11,12,13,14],6,true);
 
-		var cp5 = game.add.sprite(14930,680,'checkpoint');
-
-		checkpoint.add(cp5);
-		checkpoint.getChildAt(4).scale.setTo(3);
-		checkpoint.getChildAt(4).smoothed = false;
-		checkpoint.getChildAt(4).anchor.setTo(0.5,1);
-		checkpoint.getChildAt(4).animations.add('idle',[0,1,2,3,4],12,true);
-		checkpoint.getChildAt(4).animations.add('check',[5,6,7,8,9,10,11,7,6,5],6,false);
 		
 
 
@@ -1032,14 +1223,35 @@ var groundlayer;
 	}
 
 	function activateCp(player,cp){
+		if(playerSpawnPoint[0]	!= cp.x){
+			game.time.events.add(200,check,this, cp);
 		
-		//cp.animations.play('check');
-		
+			playerSpawnPoint[0] = cp.x;
+			playerSpawnPoint[1] = cp.y;
+		}
+	}
+	function check(cp){
+		cp.animations.play('check');
+		game.time.events.add(400,wind,this,cp);
+	}
+	function wind(cp){
+		cp.animations.play('wind');
+	}
 
-		playerSpawnPoint[0] = cp.x;
-		playerSpawnPoint[1] = cp.y;
+	function uncheck(cp){
+		cp.animations.play('idle');
+	}
+
+
+	function setgWell(){
+		pozzo1 = game.add.sprite(11570, 0, 'buco1');
+		pozzo1.animations.add('g',[0,1,2,3,4,5,6,7,8,9],8,true);
+		pozzo2 = game.add.sprite(12260,0,'buco2');
+		pozzo2.animations.add('g',[0,1,2,3,4,5,6,7,8,9],8,true);
 	}
 	function gravityWell(x1,x2, g){
+		pozzo1.play('g');
+		pozzo2.play('g');
 		if(player.x > x1 && player.x < x2){
 			player.body.gravity.y = g;
 		}
@@ -1055,10 +1267,10 @@ var groundlayer;
 		game.debug.physicsGroup(lupi,'rgba(255,0,0,0.3)');
 		game.debug.physicsGroup(arcieri,'rgba(255,0,0,0.3)');
 		game.debug.physicsGroup(hitboxes,'rgba(0,170,255,0.3)');
-		game.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');*/
+		game.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');
 		game.debug.physicsGroup(meteore,'rgba(255,0,0,0.3)');
 		game.debug.physicsGroup(anime,'rgba(255,0,0,0.3)');
-		game.debug.physicsGroup(collezionabili,'rgba(255,255,0,0.3)');
+		game.debug.physicsGroup(collezionabili,'rgba(255,255,0,0.3)');*/
 		
 		
 

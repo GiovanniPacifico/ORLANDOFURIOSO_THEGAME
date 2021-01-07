@@ -9,3 +9,48 @@
 		padding-top: 5vw;	
 		padding-left: 22vw;
 		}
+
+	#frame{
+		height: 768px;
+		width: 1024px;
+		background-color: black;
+		background-image: url("assets/copertinaprova.jpg");
+		display: block;
+		margin-top: 5vw;	
+		margin-left: 22vw;
+	}
+	#frames1{
+		height: 768px;
+		width: 1024px;
+		background-color: black;
+		background-image: url("assets/render1.jpg");
+		display: block;
+		margin-top: 5vw;	
+		margin-left: 22vw;
+	}
+	.pergamena{
+		height: 768px;
+		width: auto;
+		background: url("assets/pergamenaCopertina.png") no-repeat;
+	}
+	
+	.btn{
+		display: block;
+		height: 27px;
+		width: 132px;
+		padding-left: 114px;
+		padding-top: 330px;
+	}
+
+	.story{
+		padding-top :30px;
+	}
+	.cred{
+		padding-top :30px;
+	}
+
+	.under{
+		display: absolute;
+		padding-left: 22vw;
+	}
+	
