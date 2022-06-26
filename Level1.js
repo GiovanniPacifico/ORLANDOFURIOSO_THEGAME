@@ -14,24 +14,25 @@ var game = new Phaser.Game(1024,768, Phaser.AUTO,'ORLANDOFURIOSO',{preload: prel
 		game.load.image('luna3', 'assets/luna3p.png'); 
 		game.load.image('luna4', 'assets/luna4.png');
 		game.load.image('maschera','assets/maschera.png'); 
-		game.load.image('perg1','assets/Pergamena_Bosco_1.png');
-		game.load.image('perg2','assets/Pergamena_Bosco_2.png');
-		game.load.image('perg3','assets/Pergamena_Bosco_3.png');
-		game.load.image('perg4','assets/Pergamena_Luna_1.png');
-		game.load.image('perg5','assets/Pergamena_Luna_2.png');
-
+		game.load.image('perg1','assets/pergamena_bosco1.png');
+		game.load.image('perg2','assets/pergamena_bosco2.png');
+		game.load.image('perg3','assets/pergamena_bosco3.png');
+		game.load.image('perg4','assets/pergamena_luna1.png');
+		game.load.image('perg5','assets/pergamena_luna2.png');
+		game.load.image('fp','assets/fp.jpg');
+		game.load.image('fn','assets/fn.jpg');
 		
 		game.load.spritesheet('astolfo', 'assets/astolfo_spritesheet.png',21,40,29); //carica lo sprite di astolfo
 
 		game.load.spritesheet('saraceno', 'assets/saraceno_spritesheet.png',21,35,17);
 		game.load.spritesheet('lupo', 'assets/wolf_running.png',45,25,9);
 		game.load.spritesheet('scudo', 'assets/scudo_anim.png',25,35,5);
-		game.load.spritesheet('tutorialmov','assets/uparrow.png',27,28,5);
+		//game.load.spritesheet('tutorialmov','assets/uparrow.png',27,28,5);
 		game.load.spritesheet('arciere','assets/arciere_spritesheet.png',26,37,6);
 		game.load.spritesheet('freccia','assets/freccia.png',39,11,1);
 		game.load.spritesheet('meteora','assets/meteora.png',23,23,3);
 		game.load.spritesheet('pergamena','assets/pergamena.png',19,23,5);
-		game.load.spritesheet('ippogrifo','assets/ippogrifo.png',51,50,1);
+		game.load.spritesheet('ippogrifo','assets/ippogrifo_sprite.png',52,49,9);
 		game.load.spritesheet('checkpoint','assets/bandiera_sprite.png',22,37,15);
 		game.load.spritesheet('anima','assets/anima.png',23,31,6);
 		game.load.spritesheet('boss','assets/Orlando_sprite.png',20,37,22);
@@ -92,7 +93,9 @@ var ippogrifo;
 var hud;
 var hpviz;
 var pergGroup;
-var tutorialmov;
+var homebtn;
+
+
 var scudi;
 var hp = 1;
 var maxHP = 3;
@@ -119,6 +122,8 @@ var frase5;
 
 
 var isGoodEnding = false;
+var goodEnding;
+var badEnding;
 
 var grav = 500;
 var scala = 2; //scala di tutti gli sprite di game
@@ -127,7 +132,7 @@ var movOrizzontale = 160; //movimento orizzontale
 var movVerticale = -420; //movimento verticale (salto o caduta rapida)
 var jumpTimer = 0; 
 var atkTimer = 0;
-let playerSpawnPoint = [100,600]; //x e y del punto di spawn del player
+let playerSpawnPoint = [100,600]; //x e y del punto di spawn del player [15100,200] per andare al boss
 var isInvincible = false;
 
 //variabili di sfondo e mappa
@@ -190,9 +195,11 @@ var groundlayer;
 		setBoss();
 		setSpada();
 		setSennoI();
-
+		
+		//Settings per hud pergamene (restart)
 		for(var i = 0; i<collPresi; i++){
 				pergGroup.getChildAt(i).tint = 0xFFFFFF;
+				pergGroup.getChildAt(i).alpha = 0.9;
 				collezionabili.getChildAt(i).kill();
 				}
 	
@@ -200,45 +207,26 @@ var groundlayer;
 		maschera.alpha = 1;
 		maschera.fixedToCamera = true;
 		fadeout(3000);
-
-		frase1 = game.add.image(512,384,'perg1');
-		frase1.alpha = 0;
-		frase1.anchor.setTo(0.5,0.5);
-		frase1.scale.setTo(0.18);
-		frase1.fixedToCamera = true;
-
-
-		frase2 = game.add.image(512,384,'perg2');
-		frase2.alpha = 0;
-		frase2.anchor.setTo(0.5,0.5);
-		frase2.scale.setTo(0.18);
-		frase2.fixedToCamera = true;
-
-		frase3 = game.add.image(512,384,'perg3');
-		frase3.alpha = 0;
-		frase3.anchor.setTo(0.5,0.5);
-		frase3.scale.setTo(0.18);
-		frase3.fixedToCamera = true;
-
-		frase4 = game.add.image(512,384,'perg4');
-		frase4.alpha = 0;
-		frase4.anchor.setTo(0.5,0.5);
-		frase4.scale.setTo(0.18);
-		frase4.fixedToCamera = true;
-
-
-		frase5 = game.add.image(512,384,'perg5');
-		frase5.alpha = 0;
-		frase5.anchor.setTo(0.5,0.5);
-		frase5.scale.setTo(0.18);
-		frase5.fixedToCamera = true;
-
-
 		
-		game.time.events.add(10,uncheck,this,checkpoint.getChildAt(0));
-		game.time.events.add(10,uncheck,this,checkpoint.getChildAt(1));
-		game.time.events.add(10,uncheck,this,checkpoint.getChildAt(2));
-		game.time.events.add(10,uncheck,this,checkpoint.getChildAt(3));
+		setEnding();
+		setPergamene();
+
+
+		uncheck(checkpoint.getChildAt(0));
+		uncheck(checkpoint.getChildAt(1));		
+		uncheck(checkpoint.getChildAt(2));		
+		uncheck(checkpoint.getChildAt(3));
+
+		if(playerSpawnPoint[0]==checkpoint.getChildAt(0).x)
+			wind(checkpoint.getChildAt(0));
+		if(playerSpawnPoint[0]==checkpoint.getChildAt(1).x)
+			wind(checkpoint.getChildAt(1));
+		if(playerSpawnPoint[0]==checkpoint.getChildAt(2).x)
+			wind(checkpoint.getChildAt(2));
+		if(playerSpawnPoint[0]==checkpoint.getChildAt(3).x)
+			wind(checkpoint.getChildAt(3));
+
+
 	}
 
 	function update(){
@@ -303,6 +291,7 @@ var groundlayer;
 		playermovement();
 		playerAtkDirection();
 		sennoFlyAway(30,5000);
+		ippogrifo.animations.play('idle');
 
 		//COMPARSA DEL SENNO
 		if(collPresi == 5){
@@ -310,21 +299,21 @@ var groundlayer;
 			senno.animations.play('idle');
 		}
 		//FINALE ALTERNATIVO
-		if(collPresi == 5 && boss.alive == false){
-			var text = game.add.text(15890,400,"HAI VINTO CON IL SENNO!",{
-				font: "30px Helvetica",
-				fill: "#F1F1f1",
-				align: "center"
-			});
-			text.anchor.setTo(0.5,1);
+		if(isGoodEnding && boss.alive == false){
+				
+				fadein(500);
+				game.add.tween(goodEnding).to({alpha:1},500, Phaser.Easing.Linear.None, true, 0, 0, false);
+
+				
+				
 		}
-		else if(collPresi != 5 && boss.alive == false){
-			var text = game.add.text(15890,400,"HAI VINTO SENZA SENNO!",{
-				font: "30px Helvetica",
-				fill: "#F1F1f1",
-				align: "center"
-			});
-			text.anchor.setTo(0.5,1);
+		else if(!isGoodEnding && boss.alive == false){
+			
+
+				fadein(500);
+				game.add.tween(badEnding).to({alpha:1},500, Phaser.Easing.Linear.None, true, 0, 0, false);
+				
+			
 		}
 
 		
@@ -351,7 +340,7 @@ var groundlayer;
 		fallMeteora(meteore.getChildAt(3),-600,100,400);
 		fallMeteora(meteore.getChildAt(4),-400,300,200);
 		
-		bossSwing(150);
+		bossSwing(500, 150);
 
 
 		if(anime.getChildAt(0).body.onFloor())
@@ -795,7 +784,7 @@ var groundlayer;
 		for(var i = 0; i<3;i++){
 		arcieri.getChildAt(i).scale.setTo(-scala,scala);
 		arcieri.getChildAt(i).anchor.setTo(0.5,1);
-		arcieri.getChildAt(i).animations.add('shoot',[0,1,2,3,4,5],3,false);
+		arcieri.getChildAt(i).animations.add('shoot',[4,5,0,1,2,3],3,false);
 		}
 
 		arcieri.setAll('smoothed',false);
@@ -900,6 +889,7 @@ var groundlayer;
 			anime.getChildAt(i).anchor.setTo(0.5,1);
 			anime.getChildAt(i).animations.add('idle',[0,1,2,3,4,5],12, true);
 			anime.getChildAt(i).animations.play('idle');
+			anime.getChildAt(i).tint = 0xCCCCCC;
 		}
 
 		//anime.setAll('body.gravity.y',0);
@@ -944,12 +934,12 @@ var groundlayer;
 		return spada;
 	}
 
-	function bossSwing(range){
+	function bossSwing(range1, range2){
 		boss.animations.play('atk');
 		var d;
-		d = boss.x - player.x - (range*3.5);
+		d = boss.x - player.x;
 
-		if(boss.alive && d <= range){
+		if(boss.alive && d <= range1 && d > range2){
 		//boss.animations.play('atk');
 		spada.trackSprite(boss,-50,-100,false);
 		spada.fireAngle = 180;
@@ -985,9 +975,11 @@ var groundlayer;
 
 			if(hp>1){
 				hpviz.getChildAt(1).tint = 0xFFFFFF;
+				hpviz.getChildAt(1).alpha = 0.9;
 			}
 			if(hp>2){
 				hpviz.getChildAt(2).tint = 0xFFFFFF;
+				hpviz.getChildAt(2).alpha = 0.9;
 			}
 		}
 
@@ -1004,7 +996,7 @@ var groundlayer;
 		var pergamena5 = collezionabili.create(12405,620,'pergamena');
 
 		for(var i=0; i<5;i++){
-		collezionabili.getChildAt(i).animations.add('mov', [0,1,2,3],6,true);
+		collezionabili.getChildAt(i).animations.add('mov', [0,1,2,3],4,true);
 		collezionabili.getChildAt(i).scale.setTo(1.5);
 		collezionabili.getChildAt(i).smoothed = false;
 		collezionabili.getChildAt(i).anchor.setTo(0.5,0.5);
@@ -1017,24 +1009,25 @@ var groundlayer;
 				
 			if(collPresi<nCollezionabili){
 				pergGroup.getChildAt(collPresi).tint = 0xFFFFFF;
+				pergGroup.getChildAt(collPresi).alpha = 0.9;
 				coll.kill();
 				collPresi++;
 					if(collPresi == 1){
 						game.time.events.add(10,showText,this);
-						game.time.events.add(2000,hideText,this);}
+						game.time.events.add(3000,hideText,this);}
 					if(collPresi == 2){
 						game.time.events.add(10,showText,this);
-						game.time.events.add(2000,hideText,this);}
+						game.time.events.add(3000,hideText,this);}
 					if(collPresi == 3){
 						game.time.events.add(10,showText,this);
-						game.time.events.add(2000,hideText,this);}
+						game.time.events.add(3000,hideText,this);}
 					if(collPresi == 4){
 						game.time.events.add(10,showText,this);
-						game.time.events.add(2000,hideText,this);}
+						game.time.events.add(3000,hideText,this);}
 				}
 			if(collPresi == nCollezionabili){
 					game.time.events.add(10,showText,this);
-					game.time.events.add(2000,hideText,this);
+					game.time.events.add(3000,hideText,this);
 				isGoodEnding = true;
 			}
 		}
@@ -1079,31 +1072,35 @@ var groundlayer;
 		
 		hpviz = game.add.physicsGroup(); 
 		
-		var hpviz1 = hpviz.create(50,50, 'scudo');
-		var hpviz2 = hpviz.create(110,50, 'scudo');
-		var hpviz3 = hpviz.create(170,50, 'scudo');
+		var hpviz1 = hpviz.create(50,100, 'scudo');
+		var hpviz2 = hpviz.create(110,100, 'scudo');
+		var hpviz3 = hpviz.create(170,100, 'scudo');
 
 		for(var j =0; j<maxHP; j++){
-			hpviz.getChildAt(j).anchor.setTo(0.5,0.5);
+			hpviz.getChildAt(j).anchor.setTo(0.5,1);
 			hpviz.getChildAt(j).scale.setTo(2);
 			hpviz.getChildAt(j).smoothed = false;
 			hpviz.getChildAt(j).tint = 0x808080 ;
+			hpviz.getChildAt(j).alpha = 0.5 ;
 		}
+
 		hpviz1.tint = 0xFFFFFF;
+		hpviz1.alpha = 0.9;
 
 		pergGroup = game.add.physicsGroup();
 		
-		var pergviz1 = pergGroup.create(940,50,'pergamena');
-		var pergviz2 = pergGroup.create(880,50,'pergamena');
-		var pergviz3 = pergGroup.create(820,50,'pergamena');
-		var pergviz4 = pergGroup.create(760,50,'pergamena');
-		var pergviz5 = pergGroup.create(700,50,'pergamena');
+		var pergviz1 = pergGroup.create(940,100,'pergamena');
+		var pergviz2 = pergGroup.create(880,100,'pergamena');
+		var pergviz3 = pergGroup.create(820,100,'pergamena');
+		var pergviz4 = pergGroup.create(760,100,'pergamena');
+		var pergviz5 = pergGroup.create(700,100,'pergamena');
 
 		for(var i =0; i<nCollezionabili; i++){
-			pergGroup.getChildAt(i).anchor.setTo(0.5,0.5);
+			pergGroup.getChildAt(i).anchor.setTo(0.5,1);
 			pergGroup.getChildAt(i).scale.setTo(3);
 			pergGroup.getChildAt(i).smoothed = false;
 			pergGroup.getChildAt(i).tint = 0x808080 ;
+			pergGroup.getChildAt(i).alpha = 0.5 ;
 
 		}
 /* FEATURE ELIMINATA
@@ -1123,16 +1120,18 @@ var groundlayer;
 		fraseLove.anchor.setTo(0.5,1);
 		fraseLove.alpha = 0;
 
+
+		
+
+	
 		hud.add(pergGroup);
 		hud.add(hpviz);
 		hud.add(fraseLove);
 		hud.fixedToCamera = true;
 		hud.cameraOffset.setTo(10,10);
-
-			
-
-		
 	}
+
+	
 
 
 	function setIppogrifo(){
@@ -1142,6 +1141,7 @@ var groundlayer;
 		game.physics.enable(ippogrifo);
 		ippogrifo.body.gravity.y = grav;
 		ippogrifo.anchor.setTo(0.5,1);
+		ippogrifo.animations.add('idle',[0,1,2,3,4,5,6,7,8,9],6,true);
 
 		return ippogrifo;
 	}
@@ -1260,6 +1260,59 @@ var groundlayer;
 		}
 	}
 
+	function setEnding(){
+		goodEnding = game.add.image(0,0,'fp');
+		goodEnding.alpha = 0;
+		goodEnding.fixedToCamera = true;
+
+		badEnding = game.add.image(0,0,'fn');
+		badEnding.alpha = 0;
+		badEnding.fixedToCamera = true;
+		
+		return goodEnding;
+		return badEnding;
+	}
+
+	function setPergamene(){
+		frase1 = game.add.image(512,384,'perg1');
+		frase1.alpha = 0;
+		frase1.anchor.setTo(0.5,0.5);
+		frase1.scale.setTo(0.9);
+		frase1.fixedToCamera = true;
+
+
+		frase2 = game.add.image(512,384,'perg2');
+		frase2.alpha = 0;
+		frase2.anchor.setTo(0.5,0.5);
+		frase2.scale.setTo(0.9);
+		frase2.fixedToCamera = true;
+
+		frase3 = game.add.image(512,384,'perg3');
+		frase3.alpha = 0;
+		frase3.anchor.setTo(0.5,0.5);
+		frase3.scale.setTo(0.9);
+		frase3.fixedToCamera = true;
+
+		frase4 = game.add.image(512,384,'perg4');
+		frase4.alpha = 0;
+		frase4.anchor.setTo(0.5,0.5);
+		frase4.scale.setTo(0.9);
+		frase4.fixedToCamera = true;
+
+
+		frase5 = game.add.image(512,384,'perg5');
+		frase5.alpha = 0;
+		frase5.anchor.setTo(0.5,0.5);
+		frase5.scale.setTo(0.9);
+		frase5.fixedToCamera = true;
+
+		return frase1;
+		return frase2;
+		return frase3;
+		return frase4;
+		return frase5;		
+	}
+
 	function render(){
 		/*
 		game.debug.body(player,'rgba(0,0,255,0.3)');
@@ -1270,7 +1323,7 @@ var groundlayer;
 		game.debug.physicsGroup(scudi,'rgba(100,0,255,0.3)');
 		game.debug.physicsGroup(meteore,'rgba(255,0,0,0.3)');
 		game.debug.physicsGroup(anime,'rgba(255,0,0,0.3)');
-		game.debug.physicsGroup(collezionabili,'rgba(255,255,0,0.3)');*/
+		game.debug.physicsGroup(collezionabili,'rgba(255,255,0,0.3)');
 		
 		
 
@@ -1279,5 +1332,5 @@ var groundlayer;
 		game.debug.text("hp: "+ hp,10,15);
 		game.debug.text("pergamene: "+ collPresi,60,15);
 		game.debug.text("Tutorial timer off in: " + game.time.events.duration, 10,30);
-		game.debug.text("Good Ending: " + isGoodEnding , 10,45);
+		game.debug.text("Good Ending: " + isGoodEnding , 10,45);*/
 	} 

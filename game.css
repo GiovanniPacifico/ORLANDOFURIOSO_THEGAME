@@ -2,6 +2,7 @@
 		background-image: url('assets/pattern.jpg');
 		background-repeat: 3;
 		margin: 0;
+		position: absolute;
 	}
 
 	canvas{
@@ -14,12 +15,20 @@
 		height: 768px;
 		width: 1024px;
 		background-color: black;
-		background-image: url("assets/copertinaprova.jpg");
+		background-image: url("assets/copertina.png");
 		display: block;
-		margin-top: 5vw;	
-		margin-left: 22vw;
+		margin-top: 10%;	
+		margin-left: 40%;
 	}
-	#frames1{
+	#framec{
+		height: 768px;
+		width: 1024px;
+		background-color: black;
+		display: block;
+		margin-top: 10%;	
+		margin-left: 40%;
+	}
+	#frames1{ 
 		height: 768px;
 		width: 1024px;
 		background-color: black;
@@ -28,29 +37,113 @@
 		margin-top: 5vw;	
 		margin-left: 22vw;
 	}
+	#frames2{ 
+		height: 768px;
+		width: 1024px;
+		background-color: black;
+		background-image: url("assets/render2.jpg");
+		display: block;
+		margin-top: 5vw;	
+		margin-left: 22vw;
+	}
+	#frames3{ 
+		height: 768px;
+		width: 1024px;
+		background-color: black;
+		background-image: url("assets/render3.jpg");
+		display: block;
+		margin-top: 5vw;	
+		margin-left: 22vw;
+	}
+
 	.pergamena{
 		height: 768px;
 		width: auto;
 		background: url("assets/pergamenaCopertina.png") no-repeat;
 	}
+	.pergamenacred{
+		height: 768px;
+		width: auto;
+		background: url("assets/credits.png") no-repeat;
+	}
 	
-	.btn{
-		display: block;
-		height: 27px;
+	
+	.homegame{
+		position: fixed;
+		top: 800px;
+		left:435px;
+		height: 48px;
+		width: 48px;
+		z-index: 10;
+		widows: 100%;
+		background: url('assets/prev.png');
+	}
+	.homegame:hover{
+		background: url('assets/prevh.png');
+	}
+
+	.updx{
+		top: 165px;
+		left: 1230px;
+	}
+
+	.cta{
+		position: fixed;
 		width: 132px;
-		padding-left: 114px;
-		padding-top: 330px;
+		height: 27px;
+		left: 505px;
+		z-index: 10;
 	}
-
+	.play{
+		top: 390px;
+		background:url("assets/gioca.png")no-repeat;
+	}
+	.play:hover{
+		background:url("assets/giocah.png")no-repeat;
+	}
 	.story{
-		padding-top :30px;
+		top: 450px;
+		background:url("assets/storia.png")no-repeat;
 	}
-	.cred{
-		padding-top :30px;
+	.story:hover{
+		background:url("assets/storiah.png")no-repeat;
+	}
+	.creds{
+		top: 510px;
+		background:url("assets/crediti.png")no-repeat;
+	}
+	.creds:hover{
+		background:url("assets/creditih.png")no-repeat;
 	}
 
-	.under{
-		display: absolute;
-		padding-left: 22vw;
+	.scalax2{
+		transform: scale(2);
 	}
-	
+
+	.prev{
+		position: fixed;
+		top: 130px;
+		left:1270px;
+		height: 48px;
+		width: 48px;
+		z-index: 10;
+		widows: 100%;
+		background: url('assets/prev.png');
+	}
+	.prev:hover{
+		background: url('assets/prevh.png');
+	}
+
+	.next{
+		position: fixed;
+		top: 130px;
+		left:1340px;
+		height: 48px;
+		width: 48px;
+		z-index: 10;
+		widows: 100%;
+		background: url('assets/next.png');
+	}
+	.next:hover{
+		background: url('assets/nexth.png');
+	}
